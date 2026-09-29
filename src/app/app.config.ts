@@ -17,7 +17,8 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+    // Order matters: errorInterceptor sees responses last, after authInterceptor has tried to renew on 401.
+    provideHttpClient(withInterceptors([errorInterceptor, authInterceptor])),
     // Restore the session (and fresh permissions) before the first route guard runs.
     provideAppInitializer(() => inject(AuthService).restoreSession()),
   ],

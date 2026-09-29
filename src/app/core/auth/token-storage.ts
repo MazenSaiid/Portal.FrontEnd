@@ -1,33 +1,31 @@
 import { Injectable } from '@angular/core';
 
-interface StoredToken {
+export interface StoredSession {
   accessToken: string;
   expiresAt: string;
+  refreshToken: string;
+  refreshTokenExpiresAt: string;
 }
 
-const KEY = 'portal.session';
+export const SESSION_KEY = 'portal.session';
 
-/** Persists the access token across reloads; expired tokens are treated as absent. */
+/**
+ * Persists the session across reloads and tabs. A session is usable while its refresh token
+ * is valid; an expired access token is renewed by AuthService.
+ */
 @Injectable({ providedIn: 'root' })
 export class TokenStorage {
-  read(): StoredToken | null {
+  read(): StoredSession | null {
     try {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return null;
-      const token = JSON.parse(raw) as StoredToken;
-      if (new Date(token.expiresAt).getTime() <= Date.now()) {
-        this.clear();
-        return null;
-      }
-      return token;
+      return parse(localStorage.getItem(SESSION_KEY));
     } catch {
       return null;
     }
   }
 
-  write(token: StoredToken): void {
+  write(session: StoredSession): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify(token));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     } catch {
       // Storage unavailable (private mode): the session simply won't survive a reload.
     }
@@ -35,9 +33,31 @@ export class TokenStorage {
 
   clear(): void {
     try {
-      localStorage.removeItem(KEY);
+      localStorage.removeItem(SESSION_KEY);
     } catch {
       /* ignore */
     }
   }
+
+  /** Calls back when another tab signs in, refreshes (new value) or signs out (null). */
+  onExternalChange(callback: (session: StoredSession | null) => void): void {
+    window.addEventListener('storage', (event) => {
+      if (event.key === SESSION_KEY || event.key === null) callback(parse(event.newValue));
+    });
+  }
+}
+
+function parse(raw: string | null): StoredSession | null {
+  if (!raw) return null;
+  try {
+    const session = JSON.parse(raw) as StoredSession;
+    if (!session.refreshToken || new Date(session.refreshTokenExpiresAt).getTime() <= Date.now()) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+export function isExpired(isoDate: string, skewMs = 0): boolean {
+  return new Date(isoDate).getTime() - skewMs <= Date.now();
 }

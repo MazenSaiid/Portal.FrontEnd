@@ -9,7 +9,8 @@ import { SKIP_ERROR_TOAST } from './http-context';
 
 /**
  * Converts every HTTP failure into an {@link ApiError} and gives consistent feedback:
- * 401 → back to login, 400 with field errors → left to the form, everything else → toast.
+ * 401 (after the auth interceptor could not renew the session) → back to login,
+ * 400 with field errors → left to the form, everything else → toast.
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
@@ -23,9 +24,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       const error = toApiError(err);
       const silent = req.context.get(SKIP_ERROR_TOAST);
 
-      if (error.status === 401 && !silent) {
-        toast.info('Your session has ended. Please sign in again.');
-        auth.logout(router.url);
+      if (error.status === 401) {
+        // A failed renewal has already signed the user out; only act if a session is still around.
+        if (!silent && auth.token) {
+          toast.info('Your session has ended. Please sign in again.');
+          auth.logout(router.url);
+        }
       } else if (error.status === 403) {
         // Permissions may have changed since the page loaded; refresh so the UI catches up.
         auth.refreshProfile();
