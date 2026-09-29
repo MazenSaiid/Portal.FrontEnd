@@ -1,0 +1,89 @@
+<app-modal
+  [title]="isEdit() ? 'Edit customer' : 'Add customer'"
+  [subtitle]="isEdit() ? customer()?.code : 'A customer code is assigned automatically.'"
+  [busy]="saving()"
+  (closed)="closed.emit()"
+>
+  <form id="customer-form" class="form-grid" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="field span-2">
+      <span class="field-label">Type</span>
+      <div class="segmented" role="radiogroup" aria-label="Customer type">
+        @for (type of types; track type.value) {
+          <button type="button" role="radio" [class.active]="form.controls.type.value === type.value"
+            [attr.aria-checked]="form.controls.type.value === type.value" (click)="setType(type.value)">
+            <app-icon [name]="type.icon" [size]="16" /> {{ type.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <app-form-field class="span-2" [label]="form.controls.type.value === 'Company' ? 'Company name' : 'Full name'"
+      for="cf-name" [control]="form.controls.name" [required]="true">
+      <input id="cf-name" class="input" formControlName="name" autocomplete="off"
+        [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid" />
+    </app-form-field>
+
+    <span class="section-title span-2">Contact details</span>
+
+    <app-form-field label="Email" for="cf-email" [control]="form.controls.email">
+      <input id="cf-email" class="input" type="email" formControlName="email" autocomplete="off"
+        [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid" />
+    </app-form-field>
+
+    <app-form-field label="Phone" for="cf-phone" [control]="form.controls.phone" hint="e.g. +966 55 123 4567">
+      <input id="cf-phone" class="input" type="tel" formControlName="phone" autocomplete="off"
+        [class.is-invalid]="form.controls.phone.touched && form.controls.phone.invalid" />
+    </app-form-field>
+
+    <app-form-field label="Preferred channel" for="cf-channel" [control]="form.controls.preferredChannel">
+      <select id="cf-channel" class="select" formControlName="preferredChannel">
+        @for (channel of channels; track channel.value) {
+          <option [value]="channel.value">{{ channel.label }}</option>
+        }
+      </select>
+    </app-form-field>
+
+    <app-form-field label="Preferred language" for="cf-language" [control]="form.controls.preferredLanguage">
+      <select id="cf-language" class="select" formControlName="preferredLanguage">
+        @for (language of languages; track language.value) {
+          <option [value]="language.value">{{ language.label }}</option>
+        }
+      </select>
+    </app-form-field>
+
+    @if (groupError(); as message) {
+      <div class="alert alert-danger span-2" role="alert">
+        <app-icon name="alert" [size]="16" /> <span>{{ message }}</span>
+      </div>
+    }
+
+    <span class="section-title span-2">Address</span>
+
+    <app-form-field class="span-2" label="Street address" for="cf-address" [control]="form.controls.addressLine">
+      <input id="cf-address" class="input" formControlName="addressLine" autocomplete="off" />
+    </app-form-field>
+
+    <app-form-field label="City" for="cf-city" [control]="form.controls.city">
+      <input id="cf-city" class="input" formControlName="city" autocomplete="off" />
+    </app-form-field>
+
+    <app-form-field label="Country" for="cf-country" [control]="form.controls.country">
+      <input id="cf-country" class="input" formControlName="country" autocomplete="off" />
+    </app-form-field>
+
+    <div class="field span-2">
+      <span class="field-label">Status</span>
+      <div class="inline-control">
+        <app-toggle-switch label="Active" [checked]="form.controls.isActive.value" (toggled)="setActive($event)" />
+        <span class="text-sm">{{ form.controls.isActive.value ? 'Active customer' : 'Inactive — kept for history' }}</span>
+      </div>
+    </div>
+  </form>
+
+  <ng-container modal-footer>
+    <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closed.emit()">Cancel</button>
+    <button type="submit" form="customer-form" class="btn btn-primary" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : isEdit() ? 'Save changes' : 'Add customer' }}
+    </button>
+  </ng-container>
+</app-modal>

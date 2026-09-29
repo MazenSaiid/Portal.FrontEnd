@@ -1,0 +1,30 @@
+.clickable { cursor: pointer; }
+
+.name {
+  color: var(--color-text);
+  font-weight: var(--fw-medium);
+  &:hover { color: var(--color-primary); }
+}
+
+.avatar.company { border-radius: var(--radius-md); }
+
+.contact-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--fs-sm);
+  span { display: inline-flex; align-items: center; gap: var(--space-1); }
+  app-icon { color: var(--color-text-subtle); }
+}
+
+.table-wrap {
+  position: relative;
+  min-height: 120px;
+  &.is-loading { opacity: 0.6; pointer-events: none; transition: opacity var(--transition); }
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: var(--space-10);
+}

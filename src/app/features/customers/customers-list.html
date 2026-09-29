@@ -1,0 +1,110 @@
+<div class="page">
+  <app-page-header title="Customers" description="Everyone your team supports — profiles, contacts and history.">
+    <button *appHasPermission="P.Customers.Create" type="button" class="btn btn-primary" (click)="creating.set(true)">
+      <app-icon name="plus" [size]="16" /> Add customer
+    </button>
+  </app-page-header>
+
+  <section class="card">
+    <div class="toolbar">
+      <div class="input-icon grow">
+        <app-icon name="search" [size]="16" />
+        <input class="input" type="search" placeholder="Search by name, email, phone or code (CUS-00042)"
+          aria-label="Search customers" [formControl]="search" />
+      </div>
+      <select class="select" aria-label="Filter by type" (change)="onTypeFilter($any($event.target).value)">
+        <option value="">All types</option>
+        @for (type of types; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+        }
+      </select>
+      <select class="select" aria-label="Filter by status" (change)="onStatusFilter($any($event.target).value)">
+        <option value="">All statuses</option>
+        <option value="true">Active</option>
+        <option value="false">Inactive</option>
+      </select>
+    </div>
+
+    <div class="table-wrap" [class.is-loading]="loading() && result()">
+      <table class="table">
+        <thead>
+          <tr>
+            <th appSortHeader="name" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Customer</th>
+            <th>Contact</th>
+            <th appSortHeader="city" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Location</th>
+            <th appSortHeader="status" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Status</th>
+            <th appSortHeader="lastInteractionAt" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Last interaction</th>
+            <th appSortHeader="createdAt" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Created</th>
+            <th class="actions"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (customer of result()?.items ?? []; track customer.id) {
+            <tr class="clickable" [routerLink]="['/customers', customer.id]">
+              <td>
+                <div class="identity">
+                  <span class="avatar" [class.company]="customer.type === 'Company'">
+                    @if (customer.type === 'Company') {
+                      <app-icon name="building" [size]="16" />
+                    } @else {
+                      {{ initials(customer.name) }}
+                    }
+                  </span>
+                  <div>
+                    <a class="name" [routerLink]="['/customers', customer.id]">{{ customer.name }}</a>
+                    <div class="sub">{{ customer.code }} · {{ customer.type }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="contact-cell">
+                  @if (customer.email) {
+                    <span><app-icon name="mail" [size]="14" /> {{ customer.email }}</span>
+                  }
+                  @if (customer.phone) {
+                    <span><app-icon name="phone" [size]="14" /> {{ customer.phone }}</span>
+                  }
+                </div>
+              </td>
+              <td class="text-muted">
+                {{ customer.city || '—' }}{{ customer.city && customer.country ? ', ' : '' }}{{ customer.country }}
+              </td>
+              <td>
+                @if (customer.isActive) {
+                  <span class="badge badge-success badge-dot">Active</span>
+                } @else {
+                  <span class="badge badge-danger badge-dot">Inactive</span>
+                }
+              </td>
+              <td class="text-muted">{{ customer.lastInteractionAt ? (customer.lastInteractionAt | date: 'MMM d, y') : 'None yet' }}</td>
+              <td class="text-muted">{{ customer.createdAt | date: 'MMM d, y' }}</td>
+              <td class="actions">
+                <button *appHasPermission="P.Customers.Delete" type="button" class="btn btn-ghost btn-icon danger"
+                  title="Delete" aria-label="Delete customer" [disabled]="busyId() === customer.id"
+                  (click)="remove(customer, $event)">
+                  <app-icon name="trash" [size]="16" />
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (loading() && !result()) {
+        <div class="loading"><app-spinner [size]="28" /></div>
+      } @else if (result()?.totalCount === 0) {
+        <app-empty-state icon="building" title="No customers found"
+          [message]="isFiltered() ? 'Try a different search or filter.' : 'Add your first customer to get started.'" />
+      }
+    </div>
+
+    @if (result(); as r) {
+      <app-pagination [page]="r.page" [pageSize]="r.pageSize" [total]="r.totalCount"
+        (pageChange)="goToPage($event)" (pageSizeChange)="patchQuery({ pageSize: $event })" />
+    }
+  </section>
+</div>
+
+@if (creating()) {
+  <app-customer-form-dialog [customer]="null" (saved)="onCreated($event)" (closed)="creating.set(false)" />
+}
