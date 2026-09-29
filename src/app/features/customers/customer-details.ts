@@ -11,6 +11,7 @@ import { EmptyState, Spinner } from '../../shared/ui/states';
 import { TabItem, Tabs } from '../../shared/ui/tabs';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { initials } from '../../shared/utils/format';
+import { CustomerTickets } from '../tickets/customer-tickets';
 import { CustomerActivity } from './customer-activity';
 import { CustomerAttachments } from './customer-attachments';
 import { CustomerContacts } from './customer-contacts';
@@ -23,7 +24,7 @@ import { Customer, CustomerContact, CustomersApi } from './customers.api';
   selector: 'app-customer-details',
   imports: [
     DatePipe, RouterLink, Icon, Spinner, EmptyState, Tabs, HasPermission, CustomerFormDialog,
-    CustomerActivity, CustomerNotes, CustomerAttachments, CustomerContacts,
+    CustomerActivity, CustomerNotes, CustomerAttachments, CustomerContacts, CustomerTickets,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customer-details.html',
@@ -51,19 +52,23 @@ export class CustomerDetails implements OnInit {
 
   protected readonly canAddActivity = computed(() => this.auth.hasAnyPermission(Permissions.Customers.AddActivity));
   protected readonly canEdit = computed(() => this.auth.hasAnyPermission(Permissions.Customers.Edit));
+  protected readonly canViewTickets = computed(() => this.auth.hasAnyPermission(Permissions.Tickets.View));
   protected readonly primaryContact = computed(() => this.customer()?.contacts.find((c) => c.isPrimary) ?? null);
 
   protected readonly tabs = computed<TabItem[]>(() => {
     const c = this.customer();
-    return [
+    const tabs: TabItem[] = [
       { id: 'activity', label: 'Interactions', icon: 'activity', count: c?.stats.interactions },
       { id: 'notes', label: 'Notes', icon: 'note', count: c?.stats.notes },
       { id: 'files', label: 'Files', icon: 'paperclip', count: c?.stats.attachments },
       { id: 'contacts', label: 'Contacts', icon: 'users', count: c?.contacts.length },
     ];
+    if (this.canViewTickets()) tabs.unshift({ id: 'tickets', label: 'Tickets', icon: 'ticket' });
+    return tabs;
   });
 
   ngOnInit(): void {
+    if (this.canViewTickets()) this.tab.set('tickets'); // the customer's open requests matter most
     this.reload();
   }
 

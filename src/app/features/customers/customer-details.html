@@ -102,6 +102,9 @@
         <app-tabs [tabs]="tabs()" [(active)]="tab" />
         <div class="panel">
           @switch (tab()) {
+            @case ('tickets') {
+              <app-customer-tickets [customer]="c" />
+            }
             @case ('activity') {
               <app-customer-activity [customerId]="c.id" [canAdd]="canAddActivity()" (changed)="reload()" />
             }
