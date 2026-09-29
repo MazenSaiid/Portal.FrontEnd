@@ -1,0 +1,41 @@
+.picker { position: relative; }
+
+.results {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(100% + var(--space-1));
+  z-index: 5;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  box-shadow: var(--shadow-md);
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    text-align: start;
+    cursor: pointer;
+    &:hover:not(:disabled) { background: var(--color-primary-soft); }
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+}
+
+.picked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  app-icon { color: var(--color-primary); }
+}
+.picked-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }

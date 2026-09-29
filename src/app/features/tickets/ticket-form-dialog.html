@@ -1,0 +1,114 @@
+<app-modal
+  [title]="isEdit() ? 'Edit ticket' : 'New ticket'"
+  [subtitle]="isEdit() ? ticket()?.code + ' · ' + ticket()?.customer?.name : 'Log a customer request so the team can work on it.'"
+  [busy]="saving()"
+  (closed)="closed.emit()"
+>
+  <form id="ticket-form" class="form-grid" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @if (!isEdit()) {
+      <div class="field span-2">
+        <label for="tf-customer">Customer <span class="required" aria-hidden="true">*</span></label>
+        @if (selectedCustomer(); as c) {
+          <div class="picked">
+            <app-icon name="building" [size]="16" />
+            <div class="picked-text">
+              <strong>{{ c.name }}</strong>
+              <span class="text-xs text-muted">{{ c.code }}{{ c.email ? ' · ' + c.email : '' }}</span>
+            </div>
+            @if (!customer()) {
+              <button type="button" class="btn btn-ghost btn-sm" (click)="clearCustomer()">Change</button>
+            }
+          </div>
+        } @else {
+          <div class="picker">
+            <div class="input-icon">
+              <app-icon name="search" [size]="16" />
+              <input id="tf-customer" class="input" [formControl]="customerSearch" autocomplete="off"
+                placeholder="Search by name, email, phone or code"
+                [class.is-invalid]="form.controls.customerId.touched && form.controls.customerId.invalid" />
+            </div>
+            @if (customerResults().length) {
+              <ul class="results card" role="listbox">
+                @for (c of customerResults(); track c.id) {
+                  <li>
+                    <button type="button" role="option" [disabled]="!c.isActive" (click)="pickCustomer(c)">
+                      <strong>{{ c.name }}</strong>
+                      <span class="text-xs text-muted">{{ c.code }}{{ c.email ? ' · ' + c.email : '' }}{{ c.isActive ? '' : ' · inactive' }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            } @else if (customerSearch.value.length >= 2 && !searchingCustomers()) {
+              <span class="hint">No matching customers.</span>
+            }
+          </div>
+          @if (form.controls.customerId.touched && form.controls.customerId.invalid) {
+            <span class="error" role="alert">Choose a customer.</span>
+          }
+        }
+      </div>
+    }
+
+    <app-form-field class="span-2" label="Subject" for="tf-subject" [control]="form.controls.subject" [required]="true">
+      <input id="tf-subject" class="input" formControlName="subject" placeholder="Short summary of the request"
+        [class.is-invalid]="form.controls.subject.touched && form.controls.subject.invalid" />
+    </app-form-field>
+
+    <app-form-field class="span-2" label="Description" for="tf-description" [control]="form.controls.description" [required]="true">
+      <textarea id="tf-description" class="textarea" rows="5" formControlName="description"
+        placeholder="What happened, what the customer expects, any reference numbers…"
+        [class.is-invalid]="form.controls.description.touched && form.controls.description.invalid"></textarea>
+    </app-form-field>
+
+    <app-form-field label="Category" for="tf-category" [control]="form.controls.categoryId">
+      <select id="tf-category" class="select" formControlName="categoryId">
+        @for (c of categories(); track c.id) {
+          <option [ngValue]="c.id">{{ c.name }}{{ c.isActive ? '' : ' (inactive)' }}</option>
+        }
+      </select>
+    </app-form-field>
+
+    <app-form-field label="Channel" for="tf-channel" [control]="form.controls.channel" hint="Where the request came from.">
+      <select id="tf-channel" class="select" formControlName="channel">
+        @for (c of channels; track c.value) {
+          <option [value]="c.value">{{ c.label }}</option>
+        }
+      </select>
+    </app-form-field>
+
+    <div class="field span-2">
+      <span class="field-label">Priority</span>
+      <div class="segmented" role="radiogroup" aria-label="Priority">
+        @for (p of priorities; track p.value) {
+          <button type="button" role="radio" [class.active]="form.controls.priority.value === p.value"
+            [attr.aria-checked]="form.controls.priority.value === p.value" (click)="setPriority(p.value)">
+            {{ p.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (!isEdit() && (canAssignAny() || canTakeSelf())) {
+      <app-form-field class="span-2" label="Assignee" for="tf-assignee" [control]="form.controls.assigneeId"
+        hint="Optional. Assigned tickets start as Open.">
+        <select id="tf-assignee" class="select" formControlName="assigneeId">
+          <option value="">Leave unassigned</option>
+          @if (canAssignAny()) {
+            @for (a of assignees(); track a.id) {
+              <option [value]="a.id">{{ a.fullName }} · {{ a.activeTickets }} active</option>
+            }
+          } @else if (me(); as user) {
+            <option [value]="user.id">Assign to me</option>
+          }
+        </select>
+      </app-form-field>
+    }
+  </form>
+
+  <ng-container modal-footer>
+    <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closed.emit()">Cancel</button>
+    <button type="submit" form="ticket-form" class="btn btn-primary" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : isEdit() ? 'Save changes' : 'Create ticket' }}
+    </button>
+  </ng-container>
+</app-modal>

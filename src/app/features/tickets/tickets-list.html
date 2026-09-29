@@ -1,0 +1,115 @@
+<div class="page">
+  <app-page-header title="Tickets" description="Every customer request, from first contact to resolution.">
+    <a *appHasPermission="P.Tickets.ManageCategories" routerLink="/tickets/categories" class="btn btn-secondary">
+      <app-icon name="tag" [size]="16" /> Categories
+    </a>
+    <button *appHasPermission="P.Tickets.Create" type="button" class="btn btn-primary" (click)="creating.set(true)">
+      <app-icon name="plus" [size]="16" /> New ticket
+    </button>
+  </app-page-header>
+
+  <section class="card">
+    <div class="toolbar">
+      <div class="input-icon grow">
+        <app-icon name="search" [size]="16" />
+        <input class="input" type="search" placeholder="Search subject, customer or TCK-code"
+          aria-label="Search tickets" [formControl]="search" />
+      </div>
+      <select class="select" aria-label="Filter by status" (change)="onStatusFilter($any($event.target).value)">
+        <option value="active" selected>Active tickets</option>
+        <option value="">All statuses</option>
+        @for (s of statuses; track s.value) {
+          <option [value]="s.value">{{ s.label }}</option>
+        }
+      </select>
+      <select class="select" aria-label="Filter by priority" (change)="onPriorityFilter($any($event.target).value)">
+        <option value="">All priorities</option>
+        @for (p of priorities; track p.value) {
+          <option [value]="p.value">{{ p.label }}</option>
+        }
+      </select>
+      <select class="select" aria-label="Filter by category" (change)="onCategoryFilter($any($event.target).value)">
+        <option value="">All categories</option>
+        @for (c of categories(); track c.id) {
+          <option [value]="c.id">{{ c.name }}</option>
+        }
+      </select>
+      <select class="select" aria-label="Filter by assignee" (change)="onAssigneeFilter($any($event.target).value)">
+        <option value="">Anyone</option>
+        <option value="me">Assigned to me</option>
+        <option value="unassigned">Unassigned</option>
+        @for (a of assignees(); track a.id) {
+          <option [value]="a.id">{{ a.fullName }}</option>
+        }
+      </select>
+      <button type="button" class="btn btn-secondary" [class.active-filter]="query().escalated" [attr.aria-pressed]="!!query().escalated"
+        (click)="toggleEscalated()">
+        <app-icon name="flag" [size]="16" /> Escalated
+      </button>
+    </div>
+
+    <div class="table-wrap" [class.is-loading]="loading() && result()">
+      <table class="table">
+        <thead>
+          <tr>
+            <th appSortHeader="subject" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Ticket</th>
+            <th appSortHeader="customer" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Customer</th>
+            <th appSortHeader="priority" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Priority</th>
+            <th appSortHeader="status" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Status</th>
+            <th>Assignee</th>
+            <th appSortHeader="lastActivityAt" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Last activity</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of result()?.items ?? []; track t.id) {
+            <tr class="clickable" [class.escalated]="t.isEscalated" [routerLink]="['/tickets', t.id]">
+              <td>
+                <div class="ticket-cell">
+                  <a class="subject" [routerLink]="['/tickets', t.id]">
+                    @if (t.isEscalated) {
+                      <app-icon name="flag" [size]="14" class="flag" />
+                    }
+                    {{ t.subject }}
+                  </a>
+                  <span class="sub">{{ t.code }} · {{ t.categoryName }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="ticket-cell">
+                  <span>{{ t.customerName }}</span>
+                  <span class="sub">{{ t.customerCode }}</span>
+                </div>
+              </td>
+              <td><span class="badge" [class]="'badge ' + priorityMeta(t.priority).badge">{{ priorityMeta(t.priority).label }}</span></td>
+              <td><span class="badge badge-dot" [class]="'badge badge-dot ' + statusMeta(t.status).badge">{{ statusMeta(t.status).label }}</span></td>
+              <td>
+                @if (t.assigneeName) {
+                  <span class="assignee"><span class="avatar avatar-sm">{{ initials(t.assigneeName) }}</span> {{ t.assigneeName }}</span>
+                } @else {
+                  <span class="text-muted">Unassigned</span>
+                }
+              </td>
+              <td class="text-muted">{{ t.lastActivityAt | date: 'MMM d, h:mm a' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (loading() && !result()) {
+        <div class="loading"><app-spinner [size]="28" /></div>
+      } @else if (result()?.totalCount === 0) {
+        <app-empty-state icon="ticket" title="No tickets found"
+          [message]="isFiltered() ? 'Try a different search or filter.' : 'Nothing needs attention right now.'" />
+      }
+    </div>
+
+    @if (result(); as r) {
+      <app-pagination [page]="r.page" [pageSize]="r.pageSize" [total]="r.totalCount"
+        (pageChange)="goToPage($event)" (pageSizeChange)="patchQuery({ pageSize: $event })" />
+    }
+  </section>
+</div>
+
+@if (creating()) {
+  <app-ticket-form-dialog (saved)="onCreated($event)" (closed)="creating.set(false)" />
+}

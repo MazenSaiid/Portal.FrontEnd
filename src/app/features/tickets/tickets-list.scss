@@ -1,0 +1,45 @@
+.clickable { cursor: pointer; }
+
+tr.escalated td:first-child { box-shadow: inset 3px 0 0 var(--color-danger); }
+
+.ticket-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  .sub { font-size: var(--fs-sm); color: var(--color-text-muted); }
+}
+
+.subject {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text);
+  font-weight: var(--fw-medium);
+  &:hover { color: var(--color-primary); }
+  .flag { color: var(--color-danger); }
+}
+
+.assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.active-filter {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.table-wrap {
+  position: relative;
+  min-height: 120px;
+  &.is-loading { opacity: 0.6; pointer-events: none; transition: opacity var(--transition); }
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: var(--space-10);
+}
