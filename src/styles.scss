@@ -1,1 +1,4 @@
-/* You can add global styles to this file, and also import other style files */
+// Global styles entry. See src/styles/_tokens.scss for the design system.
+@use 'styles/tokens';
+@use 'styles/base';
+@use 'styles/components';
