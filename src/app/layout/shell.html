@@ -1,0 +1,77 @@
+<div class="layout" [class.sidebar-open]="sidebarOpen()">
+  <aside class="sidebar" aria-label="Main navigation">
+    <a routerLink="/" class="brand">
+      <span class="brand-mark">P</span>
+      <span class="brand-text">
+        <strong>Portal</strong>
+        <small>Customer Support CRM</small>
+      </span>
+    </a>
+
+    <nav class="nav">
+      @for (section of navigation(); track $index) {
+        @if (section.title) {
+          <div class="nav-title">{{ section.title }}</div>
+        }
+        @for (item of section.items; track item.path) {
+          <a
+            class="nav-item"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+          >
+            <app-icon [name]="item.icon" />
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      }
+    </nav>
+  </aside>
+
+  <div class="backdrop" (click)="sidebarOpen.set(false)"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button type="button" class="btn btn-ghost btn-icon menu-toggle" aria-label="Open menu" (click)="sidebarOpen.set(true)">
+        <app-icon name="menu" />
+      </button>
+      <span class="spacer"></span>
+
+      @if (auth.user(); as user) {
+        <div class="user-menu">
+          <button type="button" class="user-button" [attr.aria-expanded]="menuOpen()" (click)="toggleMenu($event)">
+            <span class="avatar">{{ userInitials() }}</span>
+            <span class="user-text">
+              <strong>{{ user.fullName }}</strong>
+              <small>{{ user.roleName ?? 'No role' }}</small>
+            </span>
+            <app-icon name="chevron-down" [size]="16" />
+          </button>
+
+          @if (menuOpen()) {
+            <div class="dropdown card" role="menu" (click)="$event.stopPropagation()">
+              <div class="dropdown-header">
+                <strong>{{ user.fullName }}</strong>
+                <span class="text-muted text-sm">{{ user.email }}</span>
+              </div>
+              <button type="button" role="menuitem" class="dropdown-item" (click)="changingPassword.set(true); menuOpen.set(false)">
+                <app-icon name="lock" [size]="16" /> Change password
+              </button>
+              <button type="button" role="menuitem" class="dropdown-item danger" (click)="auth.logout()">
+                <app-icon name="logout" [size]="16" /> Sign out
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </header>
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+@if (changingPassword()) {
+  <app-change-password-dialog (closed)="changingPassword.set(false)" />
+}

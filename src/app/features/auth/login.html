@@ -1,0 +1,45 @@
+<div class="login">
+  <section class="hero" aria-hidden="true">
+    <div class="hero-inner">
+      <span class="brand-mark">P</span>
+      <h1>Portal</h1>
+      <p>One place for customers, tickets and your support team.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <form class="card form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="heading">
+        <h2>Sign in</h2>
+        <p class="text-muted text-sm">Use your work email and password.</p>
+      </div>
+
+      @if (error(); as message) {
+        <div class="alert alert-danger" role="alert">
+          <app-icon name="alert" [size]="16" />
+          <span>{{ message }}</span>
+        </div>
+      }
+
+      <app-form-field label="Email" for="login-email" [control]="form.controls.email">
+        <input id="login-email" class="input" type="email" autocomplete="username" formControlName="email"
+          placeholder="name@company.com" [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid" />
+      </app-form-field>
+
+      <app-form-field label="Password" for="login-password" [control]="form.controls.password">
+        <div class="password">
+          <input id="login-password" class="input" [type]="showPassword() ? 'text' : 'password'" autocomplete="current-password"
+            formControlName="password" [class.is-invalid]="form.controls.password.touched && form.controls.password.invalid" />
+          <button type="button" class="btn btn-ghost btn-sm reveal" (click)="showPassword.set(!showPassword())"
+            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+            {{ showPassword() ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+      </app-form-field>
+
+      <button type="submit" class="btn btn-primary submit" [disabled]="submitting()">
+        {{ submitting() ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+  </section>
+</div>
