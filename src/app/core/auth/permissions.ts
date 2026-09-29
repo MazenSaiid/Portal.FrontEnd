@@ -11,6 +11,16 @@ export const Permissions = {
     Delete: 'Customers.Delete',
     AddActivity: 'Customers.AddActivity',
   },
+  Tickets: {
+    View: 'Tickets.View',
+    Create: 'Tickets.Create',
+    Edit: 'Tickets.Edit',
+    Work: 'Tickets.Work',
+    Assign: 'Tickets.Assign',
+    Escalate: 'Tickets.Escalate',
+    Delete: 'Tickets.Delete',
+    ManageCategories: 'Tickets.ManageCategories',
+  },
   Users: {
     View: 'Users.View',
     Create: 'Users.Create',

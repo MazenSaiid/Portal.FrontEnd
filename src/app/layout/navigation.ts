@@ -21,7 +21,10 @@ export const NAVIGATION: NavSection[] = [
   },
   {
     title: 'Workspace',
-    items: [{ label: 'Customers', icon: 'building', path: '/customers', permissions: [Permissions.Customers.View] }],
+    items: [
+      { label: 'Tickets', icon: 'ticket', path: '/tickets', permissions: [Permissions.Tickets.View] },
+      { label: 'Customers', icon: 'building', path: '/customers', permissions: [Permissions.Customers.View] },
+    ],
   },
   {
     title: 'Administration',

@@ -23,6 +23,27 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
       },
       {
+        path: 'tickets',
+        title: 'Tickets · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.Tickets.View] },
+        loadComponent: () => import('./features/tickets/tickets-list').then((m) => m.TicketsList),
+      },
+      {
+        path: 'tickets/categories',
+        title: 'Ticket categories · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.Tickets.ManageCategories] },
+        loadComponent: () => import('./features/tickets/ticket-categories').then((m) => m.TicketCategories),
+      },
+      {
+        path: 'tickets/:id',
+        title: 'Ticket · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.Tickets.View] },
+        loadComponent: () => import('./features/tickets/ticket-details').then((m) => m.TicketDetails),
+      },
+      {
         path: 'customers',
         title: 'Customers · Portal',
         canActivate: [permissionGuard],

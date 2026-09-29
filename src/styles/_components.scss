@@ -188,6 +188,7 @@
   &-success { background: var(--color-success-soft); color: var(--color-success); border-color: transparent; }
   &-warning { background: var(--color-warning-soft); color: var(--color-warning); border-color: transparent; }
   &-danger { background: var(--color-danger-soft); color: var(--color-danger); border-color: transparent; }
+  &-info { background: var(--color-info-soft); color: var(--color-info); border-color: transparent; }
 
   &-dot::before {
     content: '';
@@ -225,6 +226,12 @@
   color: var(--color-primary);
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
+}
+
+.avatar-sm {
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
 }
 
 .identity {
