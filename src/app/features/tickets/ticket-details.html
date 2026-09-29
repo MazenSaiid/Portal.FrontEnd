@@ -1,0 +1,174 @@
+<div class="page">
+  <a routerLink="/tickets" class="back"><app-icon name="arrow-left" [size]="14" /> Tickets</a>
+
+  @if (loading()) {
+    <div class="card loading"><app-spinner [size]="28" /></div>
+  } @else if (ticket(); as t) {
+    <header class="hero card" [class.escalated]="t.isEscalated">
+      <div class="hero-text">
+        <div class="hero-meta">
+          <span class="badge badge-primary">{{ t.code }}</span>
+          <span [class]="'badge badge-dot ' + statusMeta(t.status).badge">{{ statusMeta(t.status).label }}</span>
+          <span [class]="'badge ' + priorityMeta(t.priority).badge">{{ priorityMeta(t.priority).label }} priority</span>
+          @if (t.isEscalated) {
+            <span class="badge badge-danger"><app-icon name="flag" [size]="12" /> Escalated</span>
+          }
+        </div>
+        <h1>{{ t.subject }}</h1>
+        <span class="text-sm text-muted">
+          Opened {{ t.createdAt | date: 'MMM d, y, h:mm a' }}{{ t.createdByName ? ' by ' + t.createdByName : '' }}
+          · via {{ channelMeta(t.channel).label }}
+        </span>
+      </div>
+      <div class="hero-actions">
+        @if (canEdit() && !isClosed()) {
+          <button type="button" class="btn btn-secondary" (click)="editing.set(true)"><app-icon name="edit" [size]="16" /> Edit</button>
+        }
+        <button *appHasPermission="P.Tickets.Delete" type="button" class="btn btn-ghost btn-icon danger" title="Delete ticket"
+          aria-label="Delete ticket" (click)="remove()">
+          <app-icon name="trash" [size]="16" />
+        </button>
+      </div>
+    </header>
+
+    @if (t.isEscalated && t.escalationReason) {
+      <div class="alert alert-danger">
+        <app-icon name="flag" [size]="16" />
+        <span><strong>Escalated {{ t.escalatedAt | date: 'MMM d, h:mm a' }}:</strong> {{ t.escalationReason }}</span>
+      </div>
+    }
+
+    <div class="layout">
+      <div class="main">
+        <section class="card">
+          <div class="card-header"><h2>Description</h2></div>
+          <p class="card-body description">{{ t.description }}</p>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><h2>Activity</h2></div>
+          <div class="card-body">
+            <app-ticket-timeline [ticketId]="t.id" [history]="history()" [canComment]="canWork() && !isClosed()"
+              [closed]="isClosed()" (commented)="onCommented($event)" />
+          </div>
+        </section>
+      </div>
+
+      <aside class="side">
+        @if (canWork() && statusActions().length) {
+          <section class="card card-body actions-card">
+            <h3>Next step</h3>
+            <div class="action-buttons">
+              @for (a of statusActions(); track a.status) {
+                <button type="button" class="btn btn-sm" [disabled]="busy()"
+                  [class]="a.status === 'Resolved' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary'"
+                  (click)="startStatus(a.status, a.label)">
+                  {{ a.label }}
+                </button>
+              }
+            </div>
+          </section>
+        }
+
+        <section class="card">
+          <div class="card-header"><h3>Details</h3></div>
+          <dl class="details-list card-body">
+            <div>
+              <dt>Assignee</dt>
+              <dd>
+                @if (canAssign() && !isClosed()) {
+                  <select class="select" aria-label="Assignee" [disabled]="busy()" (change)="assign($any($event.target).value || null)">
+                    <option value="" [selected]="!t.assigneeId">Unassigned</option>
+                    @for (a of assignees(); track a.id) {
+                      <option [value]="a.id" [selected]="a.id === t.assigneeId">{{ a.fullName }} · {{ a.activeTickets }} active</option>
+                    }
+                  </select>
+                } @else {
+                  <span class="assignee">
+                    @if (t.assigneeName) {
+                      <span class="avatar avatar-sm">{{ initials(t.assigneeName) }}</span> {{ t.assigneeName }}
+                    } @else {
+                      <span class="text-muted">Unassigned</span>
+                    }
+                  </span>
+                  @if (canWork() && !isClosed() && !canAssign()) {
+                    @if (!t.assigneeId) {
+                      <button type="button" class="btn btn-secondary btn-sm take" [disabled]="busy()" (click)="assign(meId())">Assign to me</button>
+                    } @else if (t.assigneeId === meId()) {
+                      <button type="button" class="btn btn-ghost btn-sm take" [disabled]="busy()" (click)="assign(null)">Release</button>
+                    }
+                  }
+                }
+              </dd>
+            </div>
+            <div><dt>Category</dt><dd>{{ t.categoryName }}</dd></div>
+            <div><dt>Channel</dt><dd>{{ channelMeta(t.channel).label }}</dd></div>
+            <div><dt>Last activity</dt><dd>{{ t.lastActivityAt | date: 'MMM d, y, h:mm a' }}</dd></div>
+            @if (t.resolvedAt) {
+              <div><dt>Resolved</dt><dd>{{ t.resolvedAt | date: 'MMM d, y, h:mm a' }}</dd></div>
+            }
+            @if (t.closedAt) {
+              <div><dt>Closed</dt><dd>{{ t.closedAt | date: 'MMM d, y, h:mm a' }}</dd></div>
+            }
+          </dl>
+          @if (canEscalate() && !isClosed()) {
+            <div class="escalation">
+              @if (t.isEscalated) {
+                <button type="button" class="btn btn-secondary btn-sm" [disabled]="busy()" (click)="startDeEscalate()">Remove escalation</button>
+              } @else if (isActive()) {
+                <button type="button" class="btn btn-secondary btn-sm escalate" [disabled]="busy()" (click)="startEscalate()">
+                  <app-icon name="flag" [size]="14" /> Escalate
+                </button>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="card">
+          <div class="card-header"><h3>Customer</h3></div>
+          <div class="card-body customer">
+            @if (canViewCustomers()) {
+              <a [routerLink]="['/customers', t.customer.id]" class="customer-name">{{ t.customer.name }}</a>
+            } @else {
+              <strong>{{ t.customer.name }}</strong>
+            }
+            <span class="text-xs text-muted">{{ t.customer.code }}{{ t.customer.isActive ? '' : ' · inactive' }}</span>
+            @if (t.customer.email) {
+              <a [href]="'mailto:' + t.customer.email" class="text-sm"><app-icon name="mail" [size]="14" /> {{ t.customer.email }}</a>
+            }
+            @if (t.customer.phone) {
+              <a [href]="'tel:' + t.customer.phone" class="text-sm"><app-icon name="phone" [size]="14" /> {{ t.customer.phone }}</a>
+            }
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    @if (pending(); as action) {
+      <app-modal [title]="action.title" size="sm" [busy]="busy()" (closed)="pending.set(null)">
+        <label for="tk-note" class="field-label">{{ action.required ? 'Note (required)' : 'Note' }}</label>
+        <textarea id="tk-note" class="textarea" rows="4" [formControl]="note" [placeholder]="notePlaceholder(action)"
+          [class.is-invalid]="note.touched && note.invalid"></textarea>
+        @if (note.touched && note.invalid) {
+          <span class="error text-xs">Please add a note.</span>
+        }
+        <ng-container modal-footer>
+          <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="pending.set(null)">Cancel</button>
+          <button type="button" [class]="action.kind === 'escalate' ? 'btn btn-danger' : 'btn btn-primary'" [disabled]="busy()" (click)="submitAction()">
+            {{ busy() ? 'Saving…' : action.title }}
+          </button>
+        </ng-container>
+      </app-modal>
+    }
+
+    @if (editing()) {
+      <app-ticket-form-dialog [ticket]="t" (saved)="onSaved($event)" (closed)="editing.set(false)" />
+    }
+  } @else {
+    <div class="card">
+      <app-empty-state icon="ticket" title="Ticket not found" message="It may have been deleted.">
+        <a routerLink="/tickets" class="btn btn-primary">Back to tickets</a>
+      </app-empty-state>
+    </div>
+  }
+</div>
