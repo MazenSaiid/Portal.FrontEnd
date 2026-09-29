@@ -1,0 +1,133 @@
+<div class="page">
+  <a routerLink="/customers" class="back"><app-icon name="arrow-left" [size]="14" /> Customers</a>
+
+  @if (loading()) {
+    <div class="card loading"><app-spinner [size]="28" /></div>
+  } @else if (customer(); as c) {
+    <header class="hero card">
+      <span class="avatar hero-avatar" [class.company]="c.type === 'Company'">
+        @if (c.type === 'Company') {
+          <app-icon name="building" [size]="22" />
+        } @else {
+          {{ initials(c.name) }}
+        }
+      </span>
+      <div class="hero-text">
+        <h1>{{ c.name }}</h1>
+        <div class="hero-meta">
+          <span class="badge badge-primary">{{ c.code }}</span>
+          <span class="badge">{{ c.type }}</span>
+          @if (c.isActive) {
+            <span class="badge badge-success badge-dot">Active</span>
+          } @else {
+            <span class="badge badge-danger badge-dot">Inactive</span>
+          }
+          <span class="text-muted text-sm">
+            Last interaction: {{ c.stats.lastInteractionAt ? (c.stats.lastInteractionAt | date: 'MMM d, y') : 'none yet' }}
+          </span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button *appHasPermission="P.Customers.Edit" type="button" class="btn btn-secondary" (click)="editing.set(true)">
+          <app-icon name="edit" [size]="16" /> Edit
+        </button>
+        <button *appHasPermission="P.Customers.Delete" type="button" class="btn btn-ghost btn-icon danger" title="Delete customer"
+          aria-label="Delete customer" [disabled]="deleting()" (click)="remove()">
+          <app-icon name="trash" [size]="16" />
+        </button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="card profile">
+        <div class="card-header"><h2>Profile</h2></div>
+        <dl class="details-list card-body">
+          <div>
+            <dt>Email</dt>
+            <dd>
+              @if (c.email) {
+                <a [href]="'mailto:' + c.email">{{ c.email }}</a>
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Phone</dt>
+            <dd>
+              @if (c.phone) {
+                <a [href]="'tel:' + c.phone">{{ c.phone }}</a>
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Preferred channel</dt>
+            <dd>{{ channelLabel(c.preferredChannel) }} · {{ c.preferredLanguage }}</dd>
+          </div>
+          <div>
+            <dt>Address</dt>
+            <dd>
+              @if (c.addressLine || c.city || c.country) {
+                {{ c.addressLine }}@if (c.addressLine) {<br />}
+                {{ c.city }}{{ c.city && c.country ? ', ' : '' }}{{ c.country }}
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </dd>
+          </div>
+          @if (primaryContact(); as pc) {
+            <div>
+              <dt>Primary contact</dt>
+              <dd>
+                <strong>{{ pc.name }}</strong>{{ pc.jobTitle ? ' · ' + pc.jobTitle : '' }}<br />
+                <span class="text-sm text-muted">{{ pc.email || pc.phone }}</span>
+              </dd>
+            </div>
+          }
+          <div class="audit">
+            <dt>Record</dt>
+            <dd class="text-sm text-muted">
+              Created {{ c.createdAt | date: 'MMM d, y' }}{{ c.createdByName ? ' by ' + c.createdByName : '' }}
+              @if (c.updatedAt) {
+                <br />Updated {{ c.updatedAt | date: 'MMM d, y, h:mm a' }}{{ c.updatedByName ? ' by ' + c.updatedByName : '' }}
+              }
+            </dd>
+          </div>
+        </dl>
+      </aside>
+
+      <section class="card workspace">
+        <app-tabs [tabs]="tabs()" [(active)]="tab" />
+        <div class="panel">
+          @switch (tab()) {
+            @case ('activity') {
+              <app-customer-activity [customerId]="c.id" [canAdd]="canAddActivity()" (changed)="reload()" />
+            }
+            @case ('notes') {
+              <app-customer-notes [customerId]="c.id" [canAdd]="canAddActivity()" (changed)="reload()" />
+            }
+            @case ('files') {
+              <app-customer-attachments [customerId]="c.id" [canAdd]="canAddActivity()" (changed)="reload()" />
+            }
+            @case ('contacts') {
+              <app-customer-contacts [customerId]="c.id" [contacts]="c.contacts" [canEdit]="canEdit()"
+                (changed)="onContactsChanged($event)" />
+            }
+          }
+        </div>
+      </section>
+    </div>
+
+    @if (editing()) {
+      <app-customer-form-dialog [customer]="c" (saved)="onSaved($event)" (closed)="editing.set(false)" />
+    }
+  } @else {
+    <div class="card">
+      <app-empty-state icon="building" title="Customer not found" message="It may have been deleted.">
+        <a routerLink="/customers" class="btn btn-primary">Back to customers</a>
+      </app-empty-state>
+    </div>
+  }
+</div>

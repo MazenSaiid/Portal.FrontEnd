@@ -1,0 +1,82 @@
+@if (canAdd()) {
+  @if (composing()) {
+    <form class="composer" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-grid">
+        <app-form-field label="Type" for="ia-type" [control]="form.controls.type">
+          <select id="ia-type" class="select" formControlName="type">
+            @for (type of types; track type.value) {
+              <option [value]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </app-form-field>
+        <div class="field">
+          <span class="field-label">Direction</span>
+          <div class="segmented" role="radiogroup" aria-label="Direction">
+            <button type="button" role="radio" [class.active]="form.controls.direction.value === 'Inbound'"
+              [attr.aria-checked]="form.controls.direction.value === 'Inbound'" (click)="setDirection('Inbound')">
+              <app-icon name="arrow-down-left" [size]="14" /> Inbound
+            </button>
+            <button type="button" role="radio" [class.active]="form.controls.direction.value === 'Outbound'"
+              [attr.aria-checked]="form.controls.direction.value === 'Outbound'" (click)="setDirection('Outbound')">
+              <app-icon name="arrow-up-right" [size]="14" /> Outbound
+            </button>
+          </div>
+        </div>
+        <app-form-field class="span-2" label="Subject" for="ia-subject" [control]="form.controls.subject" [required]="true">
+          <input id="ia-subject" class="input" formControlName="subject" placeholder="e.g. Asked about invoice #1042"
+            [class.is-invalid]="form.controls.subject.touched && form.controls.subject.invalid" />
+        </app-form-field>
+        <app-form-field class="span-2" label="Summary" for="ia-summary" [control]="form.controls.summary">
+          <textarea id="ia-summary" class="textarea" rows="3" formControlName="summary"
+            placeholder="What was discussed and agreed?"></textarea>
+        </app-form-field>
+        <app-form-field label="When" for="ia-when" [control]="form.controls.occurredAt" [required]="true">
+          <input id="ia-when" class="input" type="datetime-local" formControlName="occurredAt"
+            [class.is-invalid]="form.controls.occurredAt.touched && form.controls.occurredAt.invalid" />
+        </app-form-field>
+      </div>
+      <div class="composer-actions">
+        <span class="text-xs text-muted">Interactions are part of the customer's history and can't be edited later.</span>
+        <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="composing.set(false)">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Log interaction' }}</button>
+      </div>
+    </form>
+  } @else {
+    <button type="button" class="btn btn-primary btn-sm log-button" (click)="startComposing()">
+      <app-icon name="plus" [size]="14" /> Log interaction
+    </button>
+  }
+}
+
+@if (loading() && items().length === 0) {
+  <div class="loading"><app-spinner /></div>
+} @else if (items().length === 0) {
+  <app-empty-state icon="activity" title="No interactions yet"
+    [message]="canAdd() ? 'Log calls, emails and meetings to build the customer history.' : 'Nothing has been logged for this customer.'" />
+} @else {
+  <ol class="timeline">
+    @for (item of items(); track item.id) {
+      <li class="entry">
+        <span class="marker"><app-icon [name]="meta(item.type).icon" [size]="16" /></span>
+        <div class="entry-body">
+          <div class="entry-head">
+            <strong>{{ item.subject }}</strong>
+            <span class="badge">{{ meta(item.type).label }}</span>
+            <span class="badge" [class.badge-primary]="item.direction === 'Outbound'">{{ item.direction }}</span>
+          </div>
+          @if (item.summary) {
+            <p class="summary">{{ item.summary }}</p>
+          }
+          <span class="text-xs text-muted">
+            {{ item.occurredAt | date: 'MMM d, y, h:mm a' }}{{ item.createdByName ? ' · logged by ' + item.createdByName : '' }}
+          </span>
+        </div>
+      </li>
+    }
+  </ol>
+  @if (items().length < total()) {
+    <button type="button" class="btn btn-secondary btn-sm more" [disabled]="loading()" (click)="load(page() + 1)">
+      {{ loading() ? 'Loading…' : 'Show older interactions' }}
+    </button>
+  }
+}
