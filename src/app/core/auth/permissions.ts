@@ -4,6 +4,13 @@
  * (it lists whatever the API returns), so this file only lists keys the UI checks.
  */
 export const Permissions = {
+  Customers: {
+    View: 'Customers.View',
+    Create: 'Customers.Create',
+    Edit: 'Customers.Edit',
+    Delete: 'Customers.Delete',
+    AddActivity: 'Customers.AddActivity',
+  },
   Users: {
     View: 'Users.View',
     Create: 'Users.Create',

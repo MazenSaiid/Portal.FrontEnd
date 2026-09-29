@@ -20,6 +20,10 @@ export const NAVIGATION: NavSection[] = [
     items: [{ label: 'Overview', icon: 'dashboard', path: '/', permissions: [] }],
   },
   {
+    title: 'Workspace',
+    items: [{ label: 'Customers', icon: 'building', path: '/customers', permissions: [Permissions.Customers.View] }],
+  },
+  {
     title: 'Administration',
     items: [
       { label: 'Users', icon: 'users', path: '/users', permissions: [Permissions.Users.View] },

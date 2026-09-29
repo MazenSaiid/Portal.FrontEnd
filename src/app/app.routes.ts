@@ -23,6 +23,20 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
       },
       {
+        path: 'customers',
+        title: 'Customers · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.Customers.View] },
+        loadComponent: () => import('./features/customers/customers-list').then((m) => m.CustomersList),
+      },
+      {
+        path: 'customers/:id',
+        title: 'Customer · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.Customers.View] },
+        loadComponent: () => import('./features/customers/customer-details').then((m) => m.CustomerDetails),
+      },
+      {
         path: 'users',
         title: 'Users · Portal',
         canActivate: [permissionGuard],
