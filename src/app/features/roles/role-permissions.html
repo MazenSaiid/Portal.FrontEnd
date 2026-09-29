@@ -1,0 +1,89 @@
+<div class="page">
+  <app-page-header
+    [title]="data() ? data()!.roleName + ' — permissions' : 'Permissions'"
+    description="Switch a permission on to allow this role to use it. Changes apply immediately."
+  >
+    <a header-back routerLink="/roles" class="back">
+      <app-icon name="arrow-left" [size]="14" /> Roles
+    </a>
+    @if (data()) {
+      <div class="summary">
+        <strong>{{ totals().granted }}</strong>
+        <span class="text-muted">of {{ totals().total }} granted</span>
+      </div>
+    }
+  </app-page-header>
+
+  @if (loading()) {
+    <div class="card loading"><app-spinner [size]="28" /></div>
+  } @else if (!data()) {
+    <div class="card">
+      <app-empty-state icon="shield" title="Role not found" message="It may have been deleted.">
+        <a routerLink="/roles" class="btn btn-primary">Back to roles</a>
+      </app-empty-state>
+    </div>
+  } @else {
+    @if (data()!.isSystem) {
+      <div class="alert">
+        <app-icon name="info" [size]="16" />
+        <span><strong>{{ data()!.roleName }}</strong> is a system role. It always has every permission and cannot be changed.</span>
+      </div>
+    } @else if (!canManage()) {
+      <div class="alert alert-warning">
+        <app-icon name="lock" [size]="16" />
+        <span>You can view this role's permissions but not change them.</span>
+      </div>
+    }
+
+    <div class="input-icon filter">
+      <app-icon name="search" [size]="16" />
+      <input class="input" type="search" placeholder="Filter permissions" aria-label="Filter permissions"
+        [ngModel]="filter()" (ngModelChange)="filter.set($event)" />
+    </div>
+
+    <div class="modules">
+      @for (module of visibleModules(); track module.module) {
+        <section class="card module">
+          <header class="card-header">
+            <div>
+              <h3>{{ module.module }}</h3>
+              <span class="text-muted text-sm">{{ grantedCount(module) }} of {{ module.permissions.length }} granted</span>
+            </div>
+            <div class="module-toggle">
+              <span class="text-sm text-muted">All</span>
+              <app-toggle-switch
+                [label]="'Toggle all ' + module.module + ' permissions'"
+                [checked]="grantedCount(module) === module.permissions.length"
+                [mixed]="grantedCount(module) > 0"
+                [disabled]="readOnly()"
+                [busy]="isModuleBusy(module)"
+                (toggled)="toggleModule(module, $event)"
+              />
+            </div>
+          </header>
+          <ul class="permissions">
+            @for (permission of module.permissions; track permission.id) {
+              <li class="permission" [class.granted]="permission.isGranted">
+                <div class="permission-text">
+                  <span class="description">{{ permission.description }}</span>
+                  <code class="key">{{ permission.key }}</code>
+                </div>
+                <app-toggle-switch
+                  [label]="permission.description"
+                  [checked]="permission.isGranted"
+                  [disabled]="readOnly()"
+                  [busy]="pending().has(permission.id)"
+                  (toggled)="togglePermission(permission.id, $event)"
+                />
+              </li>
+            }
+          </ul>
+        </section>
+      } @empty {
+        <div class="card">
+          <app-empty-state icon="search" title="No matching permissions" message="Try a different filter." />
+        </div>
+      }
+    </div>
+  }
+</div>

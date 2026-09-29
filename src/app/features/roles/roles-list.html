@@ -1,0 +1,86 @@
+<div class="page">
+  <app-page-header title="Roles & permissions" description="A role is a set of permissions. Each user has exactly one role.">
+    <button *appHasPermission="P.Roles.Create" type="button" class="btn btn-primary" (click)="editing.set('new')">
+      <app-icon name="plus" [size]="16" /> Add role
+    </button>
+  </app-page-header>
+
+  <section class="card">
+    <div class="toolbar">
+      <div class="input-icon grow">
+        <app-icon name="search" [size]="16" />
+        <input class="input" type="search" placeholder="Search roles" aria-label="Search roles" [formControl]="search" />
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Users</th>
+            <th>Permissions</th>
+            <th class="actions"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (role of roles(); track role.id) {
+            <tr>
+              <td>
+                <div class="identity">
+                  <span class="avatar role-icon"><app-icon name="shield" [size]="16" /></span>
+                  <div>
+                    <div class="name">
+                      {{ role.name }}
+                      @if (role.isSystem) {
+                        <span class="badge badge-primary" title="Built-in role with every permission">System</span>
+                      }
+                    </div>
+                    <div class="sub">{{ role.description || 'No description' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge">{{ role.userCount }} {{ role.userCount === 1 ? 'user' : 'users' }}</span>
+              </td>
+              <td>
+                <a [routerLink]="['/roles', role.id, 'permissions']" class="permissions-link">
+                  <app-icon name="key" [size]="14" />
+                  {{ role.permissionCount }} granted
+                </a>
+              </td>
+              <td class="actions">
+                <div class="row-actions">
+                  <a class="btn btn-secondary btn-sm" [routerLink]="['/roles', role.id, 'permissions']">
+                    {{ role.isSystem ? 'View' : 'Manage' }} permissions
+                  </a>
+                  <button *appHasPermission="P.Roles.Edit" type="button" class="btn btn-ghost btn-icon" title="Edit"
+                    aria-label="Edit role" (click)="editing.set(role)">
+                    <app-icon name="edit" [size]="16" />
+                  </button>
+                  <button *appHasPermission="P.Roles.Delete" type="button" class="btn btn-ghost btn-icon danger"
+                    [title]="role.isSystem ? 'System roles cannot be deleted' : 'Delete'" aria-label="Delete role"
+                    [disabled]="role.isSystem || busyId() === role.id" (click)="remove(role)">
+                    <app-icon name="trash" [size]="16" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (loading() && roles().length === 0) {
+        <div class="loading"><app-spinner [size]="28" /></div>
+      } @else if (!loading() && roles().length === 0) {
+        <app-empty-state icon="shield" title="No roles found"
+          [message]="isFiltered() ? 'Try a different search.' : 'Create a role to group permissions.'" />
+      }
+    </div>
+  </section>
+</div>
+
+@if (editing(); as target) {
+  <app-role-form-dialog [role]="target === 'new' ? null : target" (saved)="onSaved($event, target === 'new')"
+    (closed)="editing.set(null)" />
+}

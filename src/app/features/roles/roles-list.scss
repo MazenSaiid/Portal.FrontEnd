@@ -1,0 +1,27 @@
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  a.btn { margin-inline-end: var(--space-2); }
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.role-icon { border-radius: var(--radius-md); }
+
+.permissions-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--fw-medium);
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  padding: var(--space-10);
+}
