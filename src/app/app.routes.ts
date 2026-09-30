@@ -1,4 +1,6 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
+import { AuthService } from './core/auth/auth.service';
 import { authGuard, guestGuard, permissionGuard } from './core/auth/guards';
 import { Permissions } from './core/auth/permissions';
 import { Shell } from './layout/shell';
@@ -17,10 +19,30 @@ export const routes: Routes = [
     canActivateChild: [authGuard],
     children: [
       {
+        // Agents land on their dashboard; everyone else on the overview (Spec 005, D1).
         path: '',
         pathMatch: 'full',
+        redirectTo: () =>
+          inject(Router).parseUrl(inject(AuthService).hasAnyPermission(Permissions.Dashboard.View) ? '/dashboard' : '/overview'),
+      },
+      {
+        path: 'overview',
         title: 'Overview · Portal',
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
+      },
+      {
+        path: 'dashboard',
+        title: 'Dashboard · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.Dashboard.View] },
+        loadComponent: () => import('./features/dashboard/agent-dashboard').then((m) => m.AgentDashboard),
+      },
+      {
+        path: 'quick-replies',
+        title: 'Quick replies · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.Tickets.Work, Permissions.QuickReplies.Manage] },
+        loadComponent: () => import('./features/quick-replies/quick-replies').then((m) => m.QuickReplies),
       },
       {
         path: 'tickets',

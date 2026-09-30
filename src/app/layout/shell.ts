@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { AuthService } from '../core/auth/auth.service';
 import { ChangePasswordDialog } from '../features/account/change-password-dialog';
+import { RemindersService } from '../features/dashboard/reminders.service';
 import { Icon } from '../shared/ui/icon';
 import { initials } from '../shared/utils/format';
 import { NAVIGATION } from './navigation';
@@ -18,6 +19,7 @@ import { NAVIGATION } from './navigation';
 })
 export class Shell {
   protected readonly auth = inject(AuthService);
+  protected readonly reminders = inject(RemindersService);
 
   protected readonly sidebarOpen = signal(false);
   protected readonly menuOpen = signal(false);
@@ -27,7 +29,9 @@ export class Shell {
   protected readonly navigation = computed(() =>
     NAVIGATION.map((section) => ({
       ...section,
-      items: section.items.filter((item) => this.auth.hasAnyPermission(...item.permissions)),
+      items: section.items.filter(
+        (item) => this.auth.hasAnyPermission(...item.permissions) && !(item.hiddenWith && this.auth.hasAnyPermission(...item.hiddenWith)),
+      ),
     })).filter((section) => section.items.length > 0),
   );
 
@@ -35,7 +39,10 @@ export class Shell {
     // Close the mobile drawer after navigating.
     inject(Router)
       .events.pipe(filter((e) => e instanceof NavigationEnd), takeUntilDestroyed())
-      .subscribe(() => this.sidebarOpen.set(false));
+      .subscribe(() => {
+        this.sidebarOpen.set(false);
+        this.reminders.refresh();
+      });
   }
 
   protected toggleMenu(event: MouseEvent): void {

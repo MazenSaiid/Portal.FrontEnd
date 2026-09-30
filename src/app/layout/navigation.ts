@@ -7,6 +7,8 @@ export interface NavItem {
   path: string;
   /** Shown when the user holds any of these; empty means every signed-in user. */
   permissions: string[];
+  /** Hidden when the user holds any of these (e.g. Overview is replaced by the dashboard). */
+  hiddenWith?: string[];
 }
 
 export interface NavSection {
@@ -17,13 +19,22 @@ export interface NavSection {
 /** Sidebar menu. New modules add an entry here; items the user cannot access are hidden. */
 export const NAVIGATION: NavSection[] = [
   {
-    items: [{ label: 'Overview', icon: 'dashboard', path: '/', permissions: [] }],
+    items: [
+      { label: 'Dashboard', icon: 'dashboard', path: '/dashboard', permissions: [Permissions.Dashboard.View] },
+      { label: 'Overview', icon: 'dashboard', path: '/overview', permissions: [], hiddenWith: [Permissions.Dashboard.View] },
+    ],
   },
   {
     title: 'Workspace',
     items: [
       { label: 'Tickets', icon: 'ticket', path: '/tickets', permissions: [Permissions.Tickets.View] },
       { label: 'Customers', icon: 'building', path: '/customers', permissions: [Permissions.Customers.View] },
+      {
+        label: 'Quick replies',
+        icon: 'message',
+        path: '/quick-replies',
+        permissions: [Permissions.Tickets.Work, Permissions.QuickReplies.Manage],
+      },
     ],
   },
   {

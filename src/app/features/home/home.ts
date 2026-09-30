@@ -75,7 +75,7 @@ export class Home {
   protected readonly auth = inject(AuthService);
   protected readonly shortcuts = computed(() =>
     NAVIGATION.flatMap((s) => s.items).filter(
-      (item) => item.path !== '/' && this.auth.hasAnyPermission(...item.permissions),
+      (item) => !['/overview', '/dashboard'].includes(item.path) && this.auth.hasAnyPermission(...item.permissions),
     ),
   );
 }

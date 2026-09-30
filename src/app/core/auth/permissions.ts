@@ -4,6 +4,12 @@
  * (it lists whatever the API returns), so this file only lists keys the UI checks.
  */
 export const Permissions = {
+  Dashboard: {
+    View: 'Dashboard.View',
+  },
+  QuickReplies: {
+    Manage: 'QuickReplies.Manage',
+  },
   Customers: {
     View: 'Customers.View',
     Create: 'Customers.Create',
