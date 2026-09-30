@@ -134,7 +134,8 @@ export class UsersList {
   protected async remove(user: User): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Delete user?',
-      message: `This permanently deletes ${user.fullName} (${user.email}). Consider deactivating instead if you may need the account again.`,
+      message: `This permanently deletes ${user.fullName}.
+      Consider deactivating instead if you may need the account again.`,
       confirmText: 'Delete user',
     });
     if (!ok) return;

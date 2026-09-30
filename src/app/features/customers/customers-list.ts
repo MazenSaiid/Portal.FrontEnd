@@ -101,7 +101,7 @@ export class CustomersList {
     event.stopPropagation();
     const ok = await this.confirm.ask({
       title: 'Delete customer?',
-      message: `${customer.name} (${customer.code}) and all their contacts, interactions, notes and files will be permanently deleted. Deactivate instead to keep the history.`,
+      message: `${customer.name} (${customer.code}) and all their contacts, interactions, notes and files will be permanently deleted.`,
       confirmText: 'Delete customer',
     });
     if (!ok) return;

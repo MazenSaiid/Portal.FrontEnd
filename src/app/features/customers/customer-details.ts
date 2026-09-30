@@ -97,7 +97,7 @@ export class CustomerDetails implements OnInit {
     if (!c) return;
     const ok = await this.confirm.ask({
       title: 'Delete customer?',
-      message: `${c.name} (${c.code}) and all their contacts, interactions, notes and files will be permanently deleted. Deactivate instead to keep the history.`,
+      message: `${c.name} (${c.code}) and all their contacts, interactions, notes and files will be permanently deleted.`,
       confirmText: 'Delete customer',
     });
     if (!ok) return;
