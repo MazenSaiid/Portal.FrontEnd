@@ -11,6 +11,7 @@ import { initials } from '../../shared/utils/format';
 import { priorityMeta, statusMeta } from '../tickets/ticket-labels';
 import { TicketsApi } from '../tickets/tickets.api';
 import { AgentDashboard as Dashboard, DashboardApi, DashboardTicket, TeamActivity } from './dashboard.api';
+import { SlaBadge } from '../sla/sla-badge';
 import { MyTasks } from './my-tasks';
 import { RemindersService } from './reminders.service';
 
@@ -24,7 +25,7 @@ interface Tile {
 
 @Component({
   selector: 'app-agent-dashboard',
-  imports: [DatePipe, RouterLink, Icon, EmptyState, Spinner, MyTasks],
+  imports: [DatePipe, RouterLink, Icon, EmptyState, Spinner, MyTasks, SlaBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-dashboard.html',
   styleUrl: './agent-dashboard.scss',

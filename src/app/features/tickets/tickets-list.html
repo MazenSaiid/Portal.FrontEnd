@@ -42,6 +42,11 @@
           <option [value]="a.id" [selected]="query().assignedTo === a.id">{{ a.fullName }}</option>
         }
       </select>
+      <select class="select" aria-label="Filter by SLA" (change)="onSlaFilter($any($event.target).value)">
+        <option value="">Any SLA</option>
+        <option value="atRisk" [selected]="query().sla === 'atRisk'">At risk</option>
+        <option value="breached" [selected]="query().sla === 'breached'">Breached</option>
+      </select>
       <button type="button" class="btn btn-secondary" [class.active-filter]="query().escalated" [attr.aria-pressed]="!!query().escalated"
         (click)="toggleEscalated()">
         <app-icon name="flag" [size]="16" /> Escalated
@@ -56,6 +61,7 @@
             <th appSortHeader="customer" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Customer</th>
             <th appSortHeader="priority" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Priority</th>
             <th appSortHeader="status" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Status</th>
+            <th>SLA</th>
             <th>Assignee</th>
             <th appSortHeader="lastActivityAt" [sortBy]="query().sortBy" [sortDirection]="query().sortDirection" (sort)="sortBy($event)">Last activity</th>
           </tr>
@@ -82,6 +88,7 @@
               </td>
               <td><span class="badge" [class]="'badge ' + priorityMeta(t.priority).badge">{{ priorityMeta(t.priority).label }}</span></td>
               <td><span class="badge badge-dot" [class]="'badge badge-dot ' + statusMeta(t.status).badge">{{ statusMeta(t.status).label }}</span></td>
+              <td><app-sla-badge [sla]="t.sla" /></td>
               <td>
                 @if (t.assigneeName) {
                   <span class="assignee"><span class="avatar avatar-sm">{{ initials(t.assigneeName) }}</span> {{ t.assigneeName }}</span>

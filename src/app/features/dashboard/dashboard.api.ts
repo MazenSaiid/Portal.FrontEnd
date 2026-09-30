@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import type { TicketSla } from '../sla/sla.api';
 import { Assignee, TicketEventType, TicketPriority, TicketStatus } from '../tickets/tickets.api';
 
 export interface AgentTask {
@@ -46,6 +47,7 @@ export interface DashboardTicket {
   createdAt: string;
   lastActivityAt: string;
   customer: { id: number; code: string; name: string; email: string | null; phone: string | null; otherActiveTickets: number };
+  sla: TicketSla;
 }
 
 export interface TeamActivity {

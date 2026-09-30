@@ -63,6 +63,7 @@
                       <div class="ticket-badges">
                         <span [class]="'badge ' + priorityMeta(t.priority).badge">{{ priorityMeta(t.priority).label }}</span>
                         <span [class]="'badge badge-dot ' + statusMeta(t.status).badge">{{ statusMeta(t.status).label }}</span>
+                        <app-sla-badge [sla]="t.sla" />
                       </div>
                     </a>
                   </li>

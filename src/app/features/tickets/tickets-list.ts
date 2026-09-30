@@ -14,6 +14,7 @@ import { SortHeader } from '../../shared/ui/sort-header';
 import { EmptyState, Spinner } from '../../shared/ui/states';
 import { initials } from '../../shared/utils/format';
 import { ACTIVE_STATUSES, PRIORITIES, priorityMeta, STATUSES, statusMeta } from './ticket-labels';
+import { SlaBadge } from '../sla/sla-badge';
 import { TicketFormDialog } from './ticket-form-dialog';
 import { Assignee, Ticket, TicketCategory, TicketListItem, TicketPriority, TicketQuery, TicketsApi, TicketStatus } from './tickets.api';
 
@@ -22,7 +23,7 @@ import { Assignee, Ticket, TicketCategory, TicketListItem, TicketPriority, Ticke
   selector: 'app-tickets-list',
   imports: [
     DatePipe, ReactiveFormsModule, RouterLink, PageHeader, Pagination, SortHeader, EmptyState, Spinner, Icon,
-    HasPermission, TicketFormDialog,
+    HasPermission, TicketFormDialog, SlaBadge,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './tickets-list.html',
@@ -80,6 +81,7 @@ export class TicketsList {
       assignedTo: params.get('assignedTo') ?? undefined,
       priority: (PRIORITIES.find((p) => p.value === params.get('priority'))?.value) ?? undefined,
       escalated: params.get('escalated') === 'true' ? true : undefined,
+      sla: params.get('sla') === 'breached' || params.get('sla') === 'atRisk' ? (params.get('sla') as 'breached' | 'atRisk') : undefined,
       page: 1,
       pageSize: 10,
       sortBy: params.get('sortBy') ?? 'lastActivityAt',
@@ -124,13 +126,17 @@ export class TicketsList {
     this.patchQuery({ assignedTo: value || undefined });
   }
 
+  protected onSlaFilter(value: string): void {
+    this.patchQuery({ sla: (value || undefined) as TicketQuery['sla'] });
+  }
+
   protected toggleEscalated(): void {
     this.patchQuery({ escalated: this.query().escalated ? undefined : true });
   }
 
   protected isFiltered(): boolean {
     const q = this.query();
-    return !!q.search || !!q.priority || !!q.categoryId || !!q.assignedTo || !!q.escalated;
+    return !!q.search || !!q.priority || !!q.categoryId || !!q.assignedTo || !!q.escalated || !!q.sla;
   }
 
   protected onCreated(ticket: Ticket): void {

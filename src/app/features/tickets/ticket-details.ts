@@ -14,6 +14,7 @@ import { ToastService } from '../../shared/ui/toast/toast.service';
 import { initials } from '../../shared/utils/format';
 import { channelMeta, priorityMeta, statusAction, statusMeta } from './ticket-labels';
 import { TaskDialog } from '../dashboard/task-dialog';
+import { describe as describeSla } from '../sla/sla-badge';
 import { TicketFormDialog } from './ticket-form-dialog';
 import { TicketTimeline } from './ticket-timeline';
 import { Assignee, Ticket, TicketHistoryEntry, TicketsApi, TicketStatus } from './tickets.api';
@@ -42,6 +43,7 @@ export class TicketDetails implements OnInit {
   protected readonly priorityMeta = priorityMeta;
   protected readonly channelMeta = channelMeta;
   protected readonly initials = initials;
+  protected readonly describeSla = describeSla;
 
   /** Route parameter. */
   readonly id = input.required<string>();

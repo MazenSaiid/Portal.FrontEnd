@@ -70,6 +70,44 @@
           </section>
         }
 
+        @if (t.sla.resolutionDueAt) {
+          <section class="card">
+            <div class="card-header"><h3>SLA</h3></div>
+            <dl class="details-list card-body">
+              <div>
+                <dt>First response</dt>
+                <dd class="sla-row">
+                  <span>
+                    @if (t.sla.firstRespondedAt) {
+                      {{ t.sla.firstRespondedAt | date: 'MMM d, h:mm a' }}
+                    } @else {
+                      due {{ t.sla.firstResponseDueAt | date: 'MMM d, h:mm a' }}
+                    }
+                  </span>
+                  @if (describeSla(t.sla.firstResponseState, t.sla.firstResponseDueAt, 'First response', !!t.sla.firstRespondedAt); as v) {
+                    <span [class]="'badge ' + v.badge" [title]="v.title">{{ v.text }}</span>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>Resolution</dt>
+                <dd class="sla-row">
+                  <span>
+                    @if (t.sla.resolvedAt) {
+                      {{ t.sla.resolvedAt | date: 'MMM d, h:mm a' }}
+                    } @else {
+                      due {{ t.sla.resolutionDueAt | date: 'MMM d, h:mm a' }}
+                    }
+                  </span>
+                  @if (describeSla(t.sla.resolutionState, t.sla.resolutionDueAt, 'Resolution', !!t.sla.resolvedAt); as v) {
+                    <span [class]="'badge ' + v.badge" [title]="v.title">{{ v.text }}</span>
+                  }
+                </dd>
+              </div>
+            </dl>
+          </section>
+        }
+
         <section class="card">
           <div class="card-header"><h3>Details</h3></div>
           <dl class="details-list card-body">
@@ -126,7 +164,7 @@
 
         @if (canUseTasks()) {
           <button type="button" class="btn btn-secondary reminder" (click)="addingReminder.set(true)">
-            <app-icon name="bell" [size]="16" /> Add reminder
+            <app-icon name="calendar" [size]="16" /> Add reminder
           </button>
         }
 

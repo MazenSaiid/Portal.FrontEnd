@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PagedResult, SortDirection } from '../../core/models/api.models';
+import type { TicketSla } from '../sla/sla.api';
 
 export type TicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 export type TicketStatus = 'New' | 'Open' | 'InProgress' | 'OnHold' | 'Resolved' | 'Closed';
@@ -26,6 +27,7 @@ export interface TicketListItem {
   isEscalated: boolean;
   createdAt: string;
   lastActivityAt: string;
+  sla: TicketSla;
 }
 
 export interface Ticket {
@@ -49,6 +51,7 @@ export interface Ticket {
   createdAt: string;
   createdByName: string | null;
   lastActivityAt: string;
+  sla: TicketSla;
   allowedStatuses: TicketStatus[];
 }
 
@@ -60,6 +63,7 @@ export interface TicketQuery {
   assignedTo?: string;
   customerId?: number;
   escalated?: boolean;
+  sla?: 'breached' | 'atRisk';
   page: number;
   pageSize: number;
   sortBy: string;
@@ -130,6 +134,7 @@ export class TicketsApi {
     if (query.assignedTo) params = params.set('assignedTo', query.assignedTo);
     if (query.customerId) params = params.set('customerId', query.customerId);
     if (query.escalated !== undefined) params = params.set('escalated', query.escalated);
+    if (query.sla) params = params.set('sla', query.sla);
     return this.http.get<PagedResult<TicketListItem>>(this.url, { params });
   }
 
