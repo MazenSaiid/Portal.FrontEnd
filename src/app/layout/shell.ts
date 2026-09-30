@@ -5,13 +5,14 @@ import { filter } from 'rxjs';
 import { AuthService } from '../core/auth/auth.service';
 import { ChangePasswordDialog } from '../features/account/change-password-dialog';
 import { RemindersService } from '../features/dashboard/reminders.service';
+import { NotificationsBell } from '../features/notifications/notifications-bell';
 import { Icon } from '../shared/ui/icon';
 import { initials } from '../shared/utils/format';
 import { NAVIGATION } from './navigation';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, ChangePasswordDialog],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, ChangePasswordDialog, NotificationsBell],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.scss',

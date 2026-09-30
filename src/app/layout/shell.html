@@ -40,11 +40,13 @@
       @if (reminders.reminders().total > 0) {
         <a routerLink="/dashboard" class="reminder" [class.overdue]="reminders.reminders().overdue > 0"
           [title]="reminders.reminders().overdue + ' overdue, ' + reminders.reminders().dueToday + ' due today'">
-          <app-icon name="bell" [size]="18" />
+          <app-icon name="calendar" [size]="18" />
           <span class="count">{{ reminders.reminders().total }}</span>
           <span class="sr-only">tasks need attention</span>
         </a>
       }
+
+      <app-notifications-bell />
 
       @if (auth.user(); as user) {
         <div class="user-menu">
