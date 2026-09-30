@@ -101,6 +101,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/roles/role-permissions').then((m) => m.RolePermissionsPage),
       },
       {
+        path: 'sla',
+        title: 'SLA & automation · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.Sla.Manage] },
+        loadComponent: () => import('./features/sla/sla-settings').then((m) => m.SlaSettings),
+      },
+      {
         path: 'audit-log',
         title: 'Audit log · Portal',
         canActivate: [permissionGuard],

@@ -10,6 +10,9 @@ export const Permissions = {
   Dashboard: {
     View: 'Dashboard.View',
   },
+  Sla: {
+    Manage: 'Sla.Manage',
+  },
   QuickReplies: {
     Manage: 'QuickReplies.Manage',
   },

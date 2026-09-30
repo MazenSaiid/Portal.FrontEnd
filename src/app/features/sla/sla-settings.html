@@ -1,0 +1,137 @@
+<div class="page">
+  <app-page-header title="SLA & automation" description="Response promises per priority, automatic assignment and escalation rules." />
+
+  <div class="layout">
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <h2>Targets</h2>
+          <p class="text-sm text-muted">Measured 24/7 from when a ticket is created. Minutes.</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" [disabled]="savingPolicies()" (click)="savePolicies()">
+          {{ savingPolicies() ? 'Saving…' : 'Save targets' }}
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Priority</th><th>First response</th><th>Resolution</th></tr></thead>
+          <tbody>
+            @for (p of policies(); track p.priority) {
+              <tr>
+                <td><span [class]="'badge ' + priorityMeta(p.priority).badge">{{ priorityMeta(p.priority).label }}</span></td>
+                <td>
+                  <input class="input minutes" type="number" min="1" [attr.aria-label]="p.priority + ' first response minutes'"
+                    [ngModel]="p.firstResponseMinutes" (ngModelChange)="setMinutes(p.priority, 'firstResponseMinutes', $event)" />
+                  <span class="text-xs text-muted">{{ formatMinutes(p.firstResponseMinutes) }}</span>
+                </td>
+                <td>
+                  <input class="input minutes" type="number" min="1" [attr.aria-label]="p.priority + ' resolution minutes'"
+                    [ngModel]="p.resolutionMinutes" (ngModelChange)="setMinutes(p.priority, 'resolutionMinutes', $event)" />
+                  <span class="text-xs text-muted">{{ formatMinutes(p.resolutionMinutes) }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card card-body auto-assign">
+      <div>
+        <h2>Automatic assignment</h2>
+        <p class="text-sm text-muted">New tickets without an assignee go to the active agent with the fewest active tickets.</p>
+      </div>
+      <app-toggle-switch label="Automatic assignment" [checked]="autoAssign()" [busy]="savingAutoAssign()" (toggled)="setAutoAssign($event)" />
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2>Escalation rules</h2>
+        <p class="text-sm text-muted">Checked every minute. Each rule acts at most once per ticket.</p>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm" (click)="open(null)"><app-icon name="plus" [size]="14" /> Add rule</button>
+    </div>
+    @if (loading()) {
+      <div class="loading"><app-spinner /></div>
+    } @else if (rules().length === 0) {
+      <app-empty-state icon="zap" title="No rules yet" message="For example: when the resolution target is missed, escalate and notify supervisors." />
+    } @else {
+      <ul class="rules">
+        @for (r of rules(); track r.id) {
+          <li class="rule" [class.inactive]="!r.isActive">
+            <app-toggle-switch [label]="'Active: ' + r.name" [checked]="r.isActive" [busy]="busyRuleId() === r.id" (toggled)="setRuleActive(r, $event)" />
+            <div class="rule-text">
+              <strong>{{ r.name }}</strong>
+              <span class="text-sm">
+                When <em>{{ triggerLabel(r.trigger).replace('…', '') }}{{ r.trigger === 'UnassignedFor' ? ' ' + formatMinutes(r.thresholdMinutes ?? 0) : '' }}</em>
+                @if (r.minPriority) { · {{ priorityMeta(r.minPriority).label }}+ priority }
+              </span>
+              <span class="text-sm text-muted">Then {{ describeActions(r) }} · fired {{ r.timesFired }}×</span>
+            </div>
+            <button type="button" class="btn btn-ghost btn-icon" aria-label="Edit rule" title="Edit" (click)="open(r)"><app-icon name="edit" [size]="16" /></button>
+            <button type="button" class="btn btn-ghost btn-icon danger" aria-label="Delete rule" title="Delete" (click)="removeRule(r)"><app-icon name="trash" [size]="16" /></button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</div>
+
+@if (editing(); as target) {
+  <app-modal [title]="target === 'new' ? 'Add escalation rule' : 'Edit escalation rule'" [busy]="savingRule()" (closed)="editing.set(null)">
+    <form id="rule-form" class="form-grid" [formGroup]="ruleForm" (ngSubmit)="saveRule()" novalidate>
+      <app-form-field class="span-2" label="Name" for="rule-name" [control]="ruleForm.controls.name" [required]="true">
+        <input id="rule-name" class="input" formControlName="name" placeholder="e.g. Resolution missed"
+          [class.is-invalid]="ruleForm.controls.name.touched && ruleForm.controls.name.invalid" />
+      </app-form-field>
+
+      <span class="section-title span-2">When</span>
+      <app-form-field class="span-2" label="Trigger" for="rule-trigger" [control]="ruleForm.controls.trigger">
+        <select id="rule-trigger" class="select" formControlName="trigger">
+          @for (t of triggers; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </app-form-field>
+      @if (ruleForm.controls.trigger.value === 'UnassignedFor') {
+        <app-form-field label="Minutes unassigned" for="rule-threshold" [control]="ruleForm.controls.thresholdMinutes"
+          [hint]="formatMinutes(ruleForm.controls.thresholdMinutes.value || 0)">
+          <input id="rule-threshold" class="input" type="number" min="1" formControlName="thresholdMinutes" />
+        </app-form-field>
+      }
+      <app-form-field label="Only for priority" for="rule-min" [control]="ruleForm.controls.minPriority" hint="And above.">
+        <select id="rule-min" class="select" formControlName="minPriority">
+          <option value="">Any priority</option>
+          @for (p of priorities; track p.value) {
+            <option [value]="p.value">{{ p.label }}</option>
+          }
+        </select>
+      </app-form-field>
+
+      <span class="section-title span-2">Then</span>
+      <div class="field span-2 actions-list">
+        <label class="inline-control"><input type="checkbox" formControlName="escalate" /> Escalate the ticket</label>
+        <label class="inline-control"><input type="checkbox" formControlName="notifyAssignee" /> Notify the assignee</label>
+        <label class="inline-control"><input type="checkbox" formControlName="notifySupervisors" /> Notify supervisors (users who can assign tickets)</label>
+      </div>
+      <app-form-field class="span-2" label="Raise priority to" for="rule-raise" [control]="ruleForm.controls.raisePriorityTo"
+        hint="Never lowers a priority.">
+        <select id="rule-raise" class="select" formControlName="raisePriorityTo">
+          <option value="">Don't change priority</option>
+          @for (p of priorities; track p.value) {
+            <option [value]="p.value">{{ p.label }}</option>
+          }
+        </select>
+      </app-form-field>
+      @if (ruleError(); as message) {
+        <span class="error span-2" role="alert">{{ message }}</span>
+      }
+    </form>
+    <ng-container modal-footer>
+      <button type="button" class="btn btn-secondary" [disabled]="savingRule()" (click)="editing.set(null)">Cancel</button>
+      <button type="submit" form="rule-form" class="btn btn-primary" [disabled]="savingRule()">{{ savingRule() ? 'Saving…' : 'Save rule' }}</button>
+    </ng-container>
+  </app-modal>
+}
