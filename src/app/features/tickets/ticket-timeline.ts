@@ -2,9 +2,11 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 import { Icon, IconName } from '../../shared/ui/icon';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { initials } from '../../shared/utils/format';
+import { DashboardApi, fillPlaceholders, QuickReply } from '../dashboard/dashboard.api';
 import { priorityMeta, statusMeta } from './ticket-labels';
 import { TicketHistoryEntry, TicketsApi } from './tickets.api';
 
@@ -55,7 +57,24 @@ interface EntryView {
         <textarea id="tk-comment" class="textarea" rows="3" [formControl]="draft"
           placeholder="Add an update for the team — what you checked, who you contacted, next steps…"></textarea>
         <div class="composer-actions">
-          <span class="text-xs text-muted">Internal to your team.</span>
+          <div class="quick-replies">
+            <button type="button" class="btn btn-ghost btn-sm" [attr.aria-expanded]="pickerOpen()" (click)="togglePicker()">
+              <app-icon name="zap" [size]="14" /> Quick reply
+            </button>
+            @if (pickerOpen()) {
+              <ul class="picker card" role="menu">
+                @for (r of replies(); track r.id) {
+                  <li><button type="button" role="menuitem" (click)="insert(r)">
+                    <strong>{{ r.title }}</strong>
+                    <span class="text-xs text-muted">{{ r.isShared ? 'Team' : 'Personal' }}</span>
+                  </button></li>
+                } @empty {
+                  <li class="text-sm text-muted empty">No quick replies yet.</li>
+                }
+              </ul>
+            }
+          </div>
+          <span class="text-xs text-muted hint">Internal to your team.</span>
           <button type="button" class="btn btn-primary btn-sm" [disabled]="draft.invalid || saving()" (click)="send()">
             {{ saving() ? 'Posting…' : 'Add comment' }}
           </button>
@@ -75,7 +94,16 @@ export class TicketTimeline {
   readonly history = input.required<TicketHistoryEntry[]>();
   readonly canComment = input(false);
   readonly closed = input(false);
+  /** Used to fill quick-reply placeholders. */
+  readonly ticketCode = input<string | null>(null);
+  readonly customerName = input<string | null>(null);
   readonly commented = output<TicketHistoryEntry>();
+
+  private readonly dashboardApi = inject(DashboardApi);
+  private readonly auth = inject(AuthService);
+  protected readonly replies = signal<QuickReply[]>([]);
+  protected readonly pickerOpen = signal(false);
+  private repliesLoaded = false;
 
   protected readonly initials = initials;
   protected readonly saving = signal(false);
@@ -83,6 +111,26 @@ export class TicketTimeline {
     nonNullable: true,
     validators: [Validators.required, Validators.maxLength(4000), Validators.pattern(/\S/)],
   });
+
+  protected togglePicker(): void {
+    this.pickerOpen.update((open) => !open);
+    if (this.pickerOpen() && !this.repliesLoaded) {
+      this.repliesLoaded = true;
+      this.dashboardApi.quickReplies().subscribe((r) => this.replies.set(r));
+    }
+  }
+
+  /** Appends the reply with placeholders filled in; the agent can still edit before posting. */
+  protected insert(reply: QuickReply): void {
+    const text = fillPlaceholders(reply.body, {
+      customer: this.customerName(),
+      agent: this.auth.user()?.fullName,
+      ticket: this.ticketCode(),
+    });
+    const current = this.draft.value.trim();
+    this.draft.setValue(current ? `${current}\n\n${text}` : text);
+    this.pickerOpen.set(false);
+  }
 
   protected send(): void {
     if (this.draft.invalid) return;

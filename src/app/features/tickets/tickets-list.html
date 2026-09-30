@@ -16,16 +16,16 @@
           aria-label="Search tickets" [formControl]="search" />
       </div>
       <select class="select" aria-label="Filter by status" (change)="onStatusFilter($any($event.target).value)">
-        <option value="active" selected>Active tickets</option>
-        <option value="">All statuses</option>
+        <option value="active" [selected]="statusFilter() === 'active'">Active tickets</option>
+        <option value="" [selected]="statusFilter() === ''">All statuses</option>
         @for (s of statuses; track s.value) {
-          <option [value]="s.value">{{ s.label }}</option>
+          <option [value]="s.value" [selected]="statusFilter() === s.value">{{ s.label }}</option>
         }
       </select>
       <select class="select" aria-label="Filter by priority" (change)="onPriorityFilter($any($event.target).value)">
         <option value="">All priorities</option>
         @for (p of priorities; track p.value) {
-          <option [value]="p.value">{{ p.label }}</option>
+          <option [value]="p.value" [selected]="query().priority === p.value">{{ p.label }}</option>
         }
       </select>
       <select class="select" aria-label="Filter by category" (change)="onCategoryFilter($any($event.target).value)">
@@ -36,10 +36,10 @@
       </select>
       <select class="select" aria-label="Filter by assignee" (change)="onAssigneeFilter($any($event.target).value)">
         <option value="">Anyone</option>
-        <option value="me">Assigned to me</option>
-        <option value="unassigned">Unassigned</option>
+        <option value="me" [selected]="query().assignedTo === 'me'">Assigned to me</option>
+        <option value="unassigned" [selected]="query().assignedTo === 'unassigned'">Unassigned</option>
         @for (a of assignees(); track a.id) {
-          <option [value]="a.id">{{ a.fullName }}</option>
+          <option [value]="a.id" [selected]="query().assignedTo === a.id">{{ a.fullName }}</option>
         }
       </select>
       <button type="button" class="btn btn-secondary" [class.active-filter]="query().escalated" [attr.aria-pressed]="!!query().escalated"

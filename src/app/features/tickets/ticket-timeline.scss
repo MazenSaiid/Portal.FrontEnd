@@ -61,7 +61,36 @@
   padding-block-start: var(--space-5);
   border-block-start: 1px solid var(--color-border);
 }
-.composer-actions { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.composer-actions { display: flex; align-items: center; gap: var(--space-3); }
+.hint { flex: 1; }
+.quick-replies { position: relative; }
+.picker {
+  position: absolute;
+  inset-block-end: calc(100% + var(--space-1));
+  inset-inline-start: 0;
+  z-index: 5;
+  width: 280px;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  box-shadow: var(--shadow-md);
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    text-align: start;
+    cursor: pointer;
+    &:hover { background: var(--color-primary-soft); }
+  }
+  .empty { padding: var(--space-2) var(--space-3); }
+}
 .closed-note {
   display: flex;
   align-items: center;

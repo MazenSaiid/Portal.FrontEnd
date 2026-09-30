@@ -13,6 +13,7 @@ import { EmptyState, Spinner } from '../../shared/ui/states';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { initials } from '../../shared/utils/format';
 import { channelMeta, priorityMeta, statusAction, statusMeta } from './ticket-labels';
+import { TaskDialog } from '../dashboard/task-dialog';
 import { TicketFormDialog } from './ticket-form-dialog';
 import { TicketTimeline } from './ticket-timeline';
 import { Assignee, Ticket, TicketHistoryEntry, TicketsApi, TicketStatus } from './tickets.api';
@@ -25,7 +26,7 @@ type PendingAction =
 
 @Component({
   selector: 'app-ticket-details',
-  imports: [DatePipe, RouterLink, ReactiveFormsModule, Icon, Modal, Spinner, EmptyState, HasPermission, TicketTimeline, TicketFormDialog],
+  imports: [DatePipe, RouterLink, ReactiveFormsModule, Icon, Modal, Spinner, EmptyState, HasPermission, TicketTimeline, TicketFormDialog, TaskDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ticket-details.html',
   styleUrl: './ticket-details.scss',
@@ -52,6 +53,7 @@ export class TicketDetails implements OnInit {
   protected readonly loading = signal(true);
   protected readonly busy = signal(false);
   protected readonly editing = signal(false);
+  protected readonly addingReminder = signal(false);
   protected readonly pending = signal<PendingAction | null>(null);
   protected readonly note = new FormControl('', { nonNullable: true, validators: [Validators.maxLength(4000)] });
 
@@ -61,6 +63,7 @@ export class TicketDetails implements OnInit {
   protected readonly canEscalate = this.can(Permissions.Tickets.Escalate);
   protected readonly canEdit = this.can(Permissions.Tickets.Edit);
   protected readonly canViewCustomers = this.can(Permissions.Customers.View);
+  protected readonly canUseTasks = this.can(Permissions.Dashboard.View);
   protected readonly meId = computed(() => this.auth.user()?.id ?? null);
 
   protected readonly isClosed = computed(() => this.ticket()?.status === 'Closed');

@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, debounceTime, distinctUntilChanged, finalize, of, switchMap } from 'rxjs';
 import { Permissions } from '../../core/auth/permissions';
 import { PagedResult } from '../../core/models/api.models';
@@ -38,9 +38,7 @@ export class TicketsList {
   protected readonly priorityMeta = priorityMeta;
   protected readonly initials = initials;
 
-  protected readonly query = signal<TicketQuery>({
-    status: ACTIVE_STATUSES, page: 1, pageSize: 10, sortBy: 'lastActivityAt', sortDirection: 'desc',
-  });
+  protected readonly query = signal<TicketQuery>(this.queryFromUrl());
   protected readonly result = signal<PagedResult<TicketListItem> | null>(null);
   protected readonly loading = signal(true);
   protected readonly creating = signal(false);
@@ -70,6 +68,30 @@ export class TicketsList {
       .subscribe((result) => {
         if (result) this.result.set(result);
       });
+  }
+
+  /** Deep links such as /tickets?assignedTo=me&status=InProgress (used by the dashboard tiles). */
+  private queryFromUrl(): TicketQuery {
+    const params = inject(ActivatedRoute).snapshot.queryParamMap;
+    const status = params.get('status');
+    const statuses = STATUSES.map((s) => s.value);
+    return {
+      status: status && statuses.includes(status as TicketStatus) ? [status as TicketStatus] : ACTIVE_STATUSES,
+      assignedTo: params.get('assignedTo') ?? undefined,
+      priority: (PRIORITIES.find((p) => p.value === params.get('priority'))?.value) ?? undefined,
+      escalated: params.get('escalated') === 'true' ? true : undefined,
+      page: 1,
+      pageSize: 10,
+      sortBy: params.get('sortBy') ?? 'lastActivityAt',
+      sortDirection: 'desc',
+    };
+  }
+
+  /** Which option the status dropdown shows for the current query. */
+  protected statusFilter(): string {
+    const s = this.query().status;
+    if (!s?.length) return '';
+    return s.length === 1 ? s[0] : 'active';
   }
 
   protected patchQuery(patch: Partial<TicketQuery>): void {
