@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -19,7 +20,7 @@ interface EntryView {
 /** Ticket history (oldest first) with the comment box. Comments render as bubbles; changes as compact event lines. */
 @Component({
   selector: 'app-ticket-timeline',
-  imports: [DatePipe, ReactiveFormsModule, Icon],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ol class="timeline">
@@ -58,8 +59,9 @@ interface EntryView {
           placeholder="Add an update for the team — what you checked, who you contacted, next steps…"></textarea>
         <div class="composer-actions">
           <div class="quick-replies">
-            <button type="button" class="btn btn-ghost btn-sm" [attr.aria-expanded]="pickerOpen()" (click)="togglePicker()">
-              <app-icon name="zap" [size]="14" /> Quick reply
+            <button type="button" class="btn btn-secondary btn-sm" aria-haspopup="menu" [attr.aria-expanded]="pickerOpen()"
+              title="Insert a saved answer — customer name, your name and ticket code are filled in" (click)="togglePicker()">
+              <app-icon name="zap" [size]="14" /> Quick replies
             </button>
             @if (pickerOpen()) {
               <ul class="picker card" role="menu">
@@ -71,6 +73,7 @@ interface EntryView {
                 } @empty {
                   <li class="text-sm text-muted empty">No quick replies yet.</li>
                 }
+                <li class="manage"><a routerLink="/quick-replies" class="text-sm">Manage quick replies</a></li>
               </ul>
             }
           </div>

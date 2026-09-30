@@ -9,32 +9,32 @@
   </app-page-header>
 
   <section class="card">
-    <div class="toolbar">
+    <div class="toolbar single-row">
       <div class="input-icon grow">
         <app-icon name="search" [size]="16" />
-        <input class="input" type="search" placeholder="Search subject, customer or TCK-code"
+        <input class="input" type="search" placeholder="Search tickets" title="Search by subject, customer or ticket code (TCK-…)"
           aria-label="Search tickets" [formControl]="search" />
       </div>
-      <select class="select" aria-label="Filter by status" (change)="onStatusFilter($any($event.target).value)">
-        <option value="active" [selected]="statusFilter() === 'active'">Active tickets</option>
+      <select class="select f-status" aria-label="Filter by status" (change)="onStatusFilter($any($event.target).value)">
+        <option value="active" [selected]="statusFilter() === 'active'">Active</option>
         <option value="" [selected]="statusFilter() === ''">All statuses</option>
         @for (s of statuses; track s.value) {
           <option [value]="s.value" [selected]="statusFilter() === s.value">{{ s.label }}</option>
         }
       </select>
-      <select class="select" aria-label="Filter by priority" (change)="onPriorityFilter($any($event.target).value)">
-        <option value="">All priorities</option>
+      <select class="select f-priority" aria-label="Filter by priority" (change)="onPriorityFilter($any($event.target).value)">
+        <option value="">Any priority</option>
         @for (p of priorities; track p.value) {
           <option [value]="p.value" [selected]="query().priority === p.value">{{ p.label }}</option>
         }
       </select>
-      <select class="select" aria-label="Filter by category" (change)="onCategoryFilter($any($event.target).value)">
-        <option value="">All categories</option>
+      <select class="select f-category" aria-label="Filter by category" (change)="onCategoryFilter($any($event.target).value)">
+        <option value="">Any category</option>
         @for (c of categories(); track c.id) {
           <option [value]="c.id">{{ c.name }}</option>
         }
       </select>
-      <select class="select" aria-label="Filter by assignee" (change)="onAssigneeFilter($any($event.target).value)">
+      <select class="select f-assignee" aria-label="Filter by assignee" (change)="onAssigneeFilter($any($event.target).value)">
         <option value="">Anyone</option>
         <option value="me" [selected]="query().assignedTo === 'me'">Assigned to me</option>
         <option value="unassigned" [selected]="query().assignedTo === 'unassigned'">Unassigned</option>
@@ -42,12 +42,12 @@
           <option [value]="a.id" [selected]="query().assignedTo === a.id">{{ a.fullName }}</option>
         }
       </select>
-      <select class="select" aria-label="Filter by SLA" (change)="onSlaFilter($any($event.target).value)">
+      <select class="select f-sla" aria-label="Filter by SLA" (change)="onSlaFilter($any($event.target).value)">
         <option value="">Any SLA</option>
         <option value="atRisk" [selected]="query().sla === 'atRisk'">At risk</option>
         <option value="breached" [selected]="query().sla === 'breached'">Breached</option>
       </select>
-      <button type="button" class="btn btn-secondary" [class.active-filter]="query().escalated" [attr.aria-pressed]="!!query().escalated"
+      <button type="button" class="btn btn-secondary escalated-toggle" [class.active-filter]="query().escalated" [attr.aria-pressed]="!!query().escalated"
         (click)="toggleEscalated()">
         <app-icon name="flag" [size]="16" /> Escalated
       </button>
