@@ -42,6 +42,7 @@ export const NAVIGATION: NavSection[] = [
     items: [
       { label: 'Users', icon: 'users', path: '/users', permissions: [Permissions.Users.View] },
       { label: 'Roles & permissions', icon: 'shield', path: '/roles', permissions: [Permissions.Roles.View] },
+      { label: 'Audit log', icon: 'history', path: '/audit-log', permissions: [Permissions.AuditLogs.View] },
     ],
   },
 ];

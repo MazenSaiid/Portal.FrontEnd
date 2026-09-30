@@ -4,6 +4,9 @@
  * (it lists whatever the API returns), so this file only lists keys the UI checks.
  */
 export const Permissions = {
+  AuditLogs: {
+    View: 'AuditLogs.View',
+  },
   Dashboard: {
     View: 'Dashboard.View',
   },

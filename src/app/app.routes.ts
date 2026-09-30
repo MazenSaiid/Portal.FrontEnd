@@ -101,6 +101,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/roles/role-permissions').then((m) => m.RolePermissionsPage),
       },
       {
+        path: 'audit-log',
+        title: 'Audit log · Portal',
+        canActivate: [permissionGuard],
+        data: { permissions: [Permissions.AuditLogs.View] },
+        loadComponent: () => import('./features/audit/audit-log').then((m) => m.AuditLog),
+      },
+      {
         path: 'forbidden',
         title: 'Access denied · Portal',
         loadComponent: () => import('./features/errors/error-pages').then((m) => m.Forbidden),

@@ -1,0 +1,111 @@
+<div class="page">
+  <app-page-header title="Audit log" description="Who changed what, when and from where. Entries can't be edited or deleted." />
+
+  <section class="card">
+    <div class="toolbar">
+      <div class="input-icon grow">
+        <app-icon name="search" [size]="16" />
+        <input class="input" type="search" placeholder="Search summary, user, IP or record id" aria-label="Search audit log"
+          [formControl]="search" />
+      </div>
+      <select class="select" aria-label="Filter by action" (change)="onAction($any($event.target).value)">
+        <option value="">All actions</option>
+        @for (a of actions; track a.value) {
+          <option [value]="a.value">{{ a.label }}</option>
+        }
+      </select>
+      <select class="select" aria-label="Filter by record type" (change)="onEntityType($any($event.target).value)">
+        <option value="">All records</option>
+        @for (t of entityTypes(); track t) {
+          <option [value]="t">{{ entityLabel(t) }}</option>
+        }
+      </select>
+      <label class="date">
+        <span class="text-sm text-muted">From</span>
+        <input class="input" type="date" aria-label="From date" (change)="onDate('from', $any($event.target).value)" />
+      </label>
+      <label class="date">
+        <span class="text-sm text-muted">To</span>
+        <input class="input" type="date" aria-label="To date" (change)="onDate('to', $any($event.target).value)" />
+      </label>
+    </div>
+
+    <div class="table-wrap" [class.is-loading]="loading() && result()">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Record</th>
+            <th class="actions"><span class="sr-only">Details</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of result()?.items ?? []; track e.id) {
+            <tr [class.open]="expanded().has(e.id)" [class.clickable]="e.changes.length > 0"
+              (click)="e.changes.length && toggle(e.id)">
+              <td class="when">
+                <span>{{ e.occurredAt | date: 'MMM d, y' }}</span>
+                <span class="text-xs text-muted">{{ e.occurredAt | date: 'h:mm:ss a' }}</span>
+              </td>
+              <td>
+                <div class="who">
+                  <span>{{ e.userName ?? 'Unknown' }}</span>
+                  @if (e.ipAddress) {
+                    <span class="text-xs text-muted mono">{{ e.ipAddress }}</span>
+                  }
+                </div>
+              </td>
+              <td><span [class]="'badge ' + actionMeta(e.action).badge">{{ actionMeta(e.action).label }}</span></td>
+              <td>
+                <div class="record">
+                  <span>{{ e.summary }}</span>
+                  <span class="text-xs text-muted">{{ entityLabel(e.entityType) }}{{ e.changes.length ? ' · ' + e.changes.length + (e.changes.length === 1 ? ' field' : ' fields') : '' }}</span>
+                </div>
+              </td>
+              <td class="actions">
+                @if (e.changes.length) {
+                  <button type="button" class="btn btn-ghost btn-icon" [attr.aria-expanded]="expanded().has(e.id)"
+                    [attr.aria-label]="expanded().has(e.id) ? 'Hide changes' : 'Show changes'" (click)="$event.stopPropagation(); toggle(e.id)">
+                    <app-icon [name]="expanded().has(e.id) ? 'chevron-down' : 'chevron-right'" [size]="16" />
+                  </button>
+                }
+              </td>
+            </tr>
+            @if (expanded().has(e.id)) {
+              <tr class="details">
+                <td colspan="5">
+                  <table class="changes">
+                    <thead><tr><th>Field</th><th>Before</th><th>After</th></tr></thead>
+                    <tbody>
+                      @for (c of e.changes; track c.field) {
+                        <tr>
+                          <td class="field">{{ c.field }}</td>
+                          <td class="from">{{ c.from ?? '—' }}</td>
+                          <td class="to">{{ c.to ?? '—' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+
+      @if (loading() && !result()) {
+        <div class="loading"><app-spinner [size]="28" /></div>
+      } @else if (result()?.totalCount === 0) {
+        <app-empty-state icon="file" title="No entries found"
+          [message]="isFiltered() ? 'Try a different search or filter.' : 'Activity will appear here as people use the Portal.'" />
+      }
+    </div>
+
+    @if (result(); as r) {
+      <app-pagination [page]="r.page" [pageSize]="r.pageSize" [total]="r.totalCount"
+        (pageChange)="goToPage($event)" (pageSizeChange)="patchQuery({ pageSize: $event })" />
+    }
+  </section>
+</div>
