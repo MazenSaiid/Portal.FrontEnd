@@ -26,6 +26,7 @@ tr.open td { background: var(--color-surface-muted); border-block-end-color: tra
   .field { font-weight: var(--fw-medium); white-space: nowrap; }
   .from { color: var(--color-danger); overflow-wrap: anywhere; }
   .to { color: var(--color-success); overflow-wrap: anywhere; }
+  .empty { color: var(--color-text-subtle); }
 }
 
 .table-wrap {

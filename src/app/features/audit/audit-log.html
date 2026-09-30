@@ -82,8 +82,8 @@
                       @for (c of e.changes; track c.field) {
                         <tr>
                           <td class="field">{{ c.field }}</td>
-                          <td class="from">{{ c.from ?? '—' }}</td>
-                          <td class="to">{{ c.to ?? '—' }}</td>
+                          <td class="from" [class.empty]="c.from === null">{{ c.from ?? '—' }}</td>
+                          <td class="to" [class.empty]="c.to === null">{{ c.to ?? '—' }}</td>
                         </tr>
                       }
                     </tbody>
