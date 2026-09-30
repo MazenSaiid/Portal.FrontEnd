@@ -12,6 +12,7 @@ const ticket = (id: number, extra: Partial<DashboardTicket> = {}): DashboardTick
   id, code: `TCK-0000${id}`, subject: `Ticket ${id}`, priority: 'High', status: 'Open', isEscalated: false,
   categoryName: 'Billing', createdAt: '', lastActivityAt: '',
   customer: { id: 1, code: 'CUS-00001', name: 'Al Noor', email: null, phone: '+966 55', otherActiveTickets: 2 },
+  sla: { startedAt: '', firstResponseDueAt: null, firstRespondedAt: null, resolutionDueAt: null, resolvedAt: null, firstResponseState: 'None', resolutionState: 'None' },
   ...extra,
 });
 

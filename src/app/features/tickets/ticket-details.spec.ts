@@ -15,6 +15,7 @@ const baseTicket: Ticket = {
   assigneeId: null, assigneeName: null, isEscalated: false, escalatedAt: null, escalationReason: null,
   resolvedAt: null, closedAt: null, createdAt: '', createdByName: 'Sara', lastActivityAt: '',
   allowedStatuses: ['InProgress', 'OnHold', 'Resolved', 'Closed'],
+  sla: { startedAt: '', firstResponseDueAt: null, firstRespondedAt: null, resolutionDueAt: null, resolvedAt: null, firstResponseState: 'None', resolutionState: 'None' },
 };
 
 describe('TicketDetails', () => {
