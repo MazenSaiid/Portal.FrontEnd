@@ -1,0 +1,153 @@
+<div class="page">
+  <header class="welcome">
+    <div>
+      <h1>{{ greeting() }}</h1>
+      <p class="text-muted">{{ today | date: 'EEEE, MMMM d' }} · here's what needs you today.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="card loading"><app-spinner [size]="28" /></div>
+  } @else if (data(); as d) {
+    @if (d.canViewTickets) {
+      <section class="tiles" aria-label="Summary">
+        @for (tile of tiles(); track tile.label) {
+          <a class="tile card" [class]="'tile card tone-' + tile.tone" routerLink="/tickets" [queryParams]="tile.query">
+            <span class="tile-icon"><app-icon [name]="tile.icon" [size]="18" /></span>
+            <span class="tile-value">{{ tile.value }}</span>
+            <span class="tile-label">{{ tile.label }}</span>
+          </a>
+        }
+      </section>
+    }
+
+    <div class="layout">
+      <div class="column">
+        @if (d.canViewTickets) {
+          <section class="card">
+            <div class="card-header">
+              <h2>My tickets</h2>
+              <a routerLink="/tickets" [queryParams]="{ assignedTo: 'me' }" class="text-sm">View all</a>
+            </div>
+            @if (d.myTickets.length === 0) {
+              <app-empty-state icon="check-circle" title="Nothing assigned to you"
+                [message]="d.unassignedQueue.length ? 'Pick up a ticket from the queue below.' : 'Enjoy the calm.'" />
+            } @else {
+              <ul class="ticket-list">
+                @for (t of d.myTickets; track t.id) {
+                  <li>
+                    <a class="ticket" [class.escalated]="t.isEscalated" [routerLink]="['/tickets', t.id]">
+                      <div class="ticket-main">
+                        <div class="ticket-head">
+                          @if (t.isEscalated) {
+                            <app-icon name="flag" [size]="14" class="flag" />
+                          }
+                          <strong>{{ t.subject }}</strong>
+                        </div>
+                        <span class="text-xs text-muted">{{ t.code }} · {{ t.categoryName }} · active {{ t.lastActivityAt | date: 'MMM d, h:mm a' }}</span>
+                        <span class="customer">
+                          <app-icon name="building" [size]="13" />
+                          <span>{{ t.customer.name }}</span>
+                          @if (t.customer.phone) {
+                            <span class="text-muted">· {{ t.customer.phone }}</span>
+                          } @else if (t.customer.email) {
+                            <span class="text-muted">· {{ t.customer.email }}</span>
+                          }
+                          @if (t.customer.otherActiveTickets > 0) {
+                            <span class="badge badge-warning" title="Other active tickets from this customer">
+                              +{{ t.customer.otherActiveTickets }} open
+                            </span>
+                          }
+                        </span>
+                      </div>
+                      <div class="ticket-badges">
+                        <span [class]="'badge ' + priorityMeta(t.priority).badge">{{ priorityMeta(t.priority).label }}</span>
+                        <span [class]="'badge badge-dot ' + statusMeta(t.status).badge">{{ statusMeta(t.status).label }}</span>
+                      </div>
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+
+          <section class="card">
+            <div class="card-header">
+              <h2>Unassigned queue</h2>
+              <a routerLink="/tickets" [queryParams]="{ assignedTo: 'unassigned' }" class="text-sm">View all</a>
+            </div>
+            @if (d.unassignedQueue.length === 0) {
+              <app-empty-state icon="inbox" title="Queue is empty" message="Every active ticket has an owner." />
+            } @else {
+              <ul class="ticket-list">
+                @for (t of d.unassignedQueue; track t.id) {
+                  <li class="queue-item">
+                    <a class="ticket" [routerLink]="['/tickets', t.id]">
+                      <div class="ticket-main">
+                        <strong>{{ t.subject }}</strong>
+                        <span class="text-xs text-muted">{{ t.code }} · {{ t.customer.name }} · waiting since {{ t.createdAt | date: 'MMM d, h:mm a' }}</span>
+                      </div>
+                      <span [class]="'badge ' + priorityMeta(t.priority).badge">{{ priorityMeta(t.priority).label }}</span>
+                    </a>
+                    @if (canWork()) {
+                      <button type="button" class="btn btn-secondary btn-sm" [disabled]="takingId() === t.id" (click)="take(t)">
+                        {{ takingId() === t.id ? 'Taking…' : 'Take' }}
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
+      </div>
+
+      <div class="column side">
+        <app-my-tasks [initial]="d.tasks" />
+
+        @if (d.canViewTickets) {
+          <section class="card">
+            <div class="card-header"><h2>Team activity</h2></div>
+            @if (d.teamActivity.length === 0) {
+              <p class="card-body text-sm text-muted">When teammates update your tickets, you'll see it here.</p>
+            } @else {
+              <ul class="feed">
+                @for (a of d.teamActivity; track a.id) {
+                  <li>
+                    <span class="avatar avatar-sm">{{ initials(a.createdByName) }}</span>
+                    <div class="feed-text">
+                      <span><strong>{{ a.createdByName }}</strong> {{ describe(a) }} on
+                        <a [routerLink]="['/tickets', a.ticketId]">{{ a.ticketCode }}</a></span>
+                      @if (a.message) {
+                        <span class="quote">{{ a.message }}</span>
+                      }
+                      <span class="text-xs text-muted">{{ a.createdAt | date: 'MMM d, h:mm a' }}</span>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+
+          <section class="card">
+            <div class="card-header"><h2>Team workload</h2></div>
+            <ul class="team card-body">
+              @for (m of d.team; track m.id) {
+                <li>
+                  <span class="member">
+                    <span class="avatar avatar-sm">{{ initials(m.fullName) }}</span>
+                    <span class="member-name">{{ m.fullName }}{{ m.id === auth.user()?.id ? ' (you)' : '' }}</span>
+                    <span class="text-sm text-muted">{{ m.activeTickets }}</span>
+                  </span>
+                  <span class="bar"><span [style.width.%]="(m.activeTickets / maxLoad()) * 100"></span></span>
+                </li>
+              } @empty {
+                <li class="text-sm text-muted">No agents yet. Give a role the "Work tickets" permission.</li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+    </div>
+  }
+</div>

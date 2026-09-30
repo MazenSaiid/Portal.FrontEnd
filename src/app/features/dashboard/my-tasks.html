@@ -1,0 +1,65 @@
+<section class="card">
+  <div class="card-header">
+    <h2>My tasks</h2>
+    <div class="header-actions">
+      <button type="button" class="btn btn-ghost btn-sm" (click)="toggleDone()">{{ showDone() ? 'Show open' : 'Show completed' }}</button>
+      <button type="button" class="btn btn-ghost btn-icon" title="New task with due date" aria-label="New task" (click)="editing.set('new')">
+        <app-icon name="plus" [size]="16" />
+      </button>
+    </div>
+  </div>
+
+  @if (!showDone()) {
+    <form class="quick-add" (submit)="$event.preventDefault(); quickAdd()">
+      <label for="quick-task" class="sr-only">Quick add task</label>
+      <input id="quick-task" class="input" [formControl]="quickTitle" placeholder="Add a task and press Enter" />
+    </form>
+  }
+
+  @if (tasks().length === 0) {
+    <app-empty-state icon="check-circle" [title]="showDone() ? 'No completed tasks' : 'All caught up'"
+      [message]="showDone() ? undefined : 'Add reminders for call-backs and follow-ups.'" />
+  } @else {
+    <ul class="tasks">
+      @for (task of tasks(); track task.id) {
+        <li class="task" [class.done]="task.isDone">
+          <button type="button" class="check" [attr.aria-label]="task.isDone ? 'Mark as not done' : 'Mark as done'"
+            [disabled]="busyId() === task.id" (click)="setDone(task, !task.isDone)">
+            <app-icon [name]="task.isDone ? 'check-circle' : 'circle'" [size]="20" />
+          </button>
+          <div class="task-text">
+            <span class="title">{{ task.title }}</span>
+            <span class="meta">
+              @if (task.dueAt && !task.isDone) {
+                <span class="badge" [class.badge-danger]="task.isOverdue" [class.badge-warning]="isDueToday(task)">
+                  <app-icon name="calendar" [size]="12" />
+                  {{ task.isOverdue ? 'Overdue · ' : '' }}{{ task.dueAt | date: 'MMM d, h:mm a' }}
+                </span>
+              }
+              @if (task.isDone && task.completedAt) {
+                <span class="text-xs text-muted">Done {{ task.completedAt | date: 'MMM d' }}</span>
+              }
+              @if (task.ticketId) {
+                <a class="link" [routerLink]="['/tickets', task.ticketId]">{{ task.ticketCode }}</a>
+              } @else if (task.customerId) {
+                <a class="link" [routerLink]="['/customers', task.customerId]">{{ task.customerName }}</a>
+              }
+            </span>
+          </div>
+          <span class="task-actions">
+            <button type="button" class="btn btn-ghost btn-icon" aria-label="Edit task" title="Edit" (click)="editing.set(task)">
+              <app-icon name="edit" [size]="14" />
+            </button>
+            <button type="button" class="btn btn-ghost btn-icon danger" aria-label="Delete task" title="Delete" (click)="remove(task)">
+              <app-icon name="trash" [size]="14" />
+            </button>
+          </span>
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+@if (editing(); as target) {
+  <app-task-dialog [task]="target === 'new' ? null : target" (saved)="onSaved()" (closed)="editing.set(null)" />
+}
